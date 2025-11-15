@@ -1,10 +1,3 @@
-// dart format off
-
-/// Main entry point for the first_crack Flutter application.
-///
-/// This file serves as the application entry point and is responsible only for initializing and running the Flutter
-/// app.
-
 import 'package:flutter/material.dart';
 import 'app.dart';
 

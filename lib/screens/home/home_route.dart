@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'home_controller.dart';
 
-/// Route widget for the home screen.
+/// The home route for the application.
 ///
-/// Following MVC patterns, this route serves only as the entry point and delegates all logic to the HomeController
-/// through createState().
+/// This screen is the one presented when the app launches. It allows the user to start a new brew.
 class HomeRoute extends StatefulWidget {
   /// Creates the home route widget.
   const HomeRoute({super.key});

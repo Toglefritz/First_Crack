@@ -1,32 +1,56 @@
 import 'package:flutter/material.dart';
+
+import '../../services/brew/models/brew_ratio.dart';
 import 'home_route.dart';
 import 'home_view.dart';
+import 'models/dose_preset.dart';
+import 'models/output_preset.dart';
 
-/// Controller for the home screen that manages state and business logic.
+/// Controller for the [HomeRoute].
 ///
 /// Extends State<HomeRoute> to provide state management capabilities and serves as the bridge between the route and
 /// view components. All user interactions and state changes are handled here.
 class HomeController extends State<HomeRoute> {
-  /// Current state of the lamp (on/off).
-  ///
-  /// This demonstrates basic state management within the controller. The lamp state is toggled when the user interacts
-  /// with the switch.
-  bool _isLampOn = false;
+  /// The coffee dose selected on this screen, from a defined set of presets.
+  DosePreset dosePreset = DosePreset.standard;
 
-  /// Toggles the lamp state and triggers a UI rebuild.
-  ///
-  /// This method demonstrates how user interactions are handled in the controller layer, with setState() triggering
-  /// view updates.
-  void toggleLamp(bool value) {
+  /// The espresso output yield selected on this screen, from a defined set of presets.
+  OutputPreset outputPreset = OutputPreset.standard;
+
+  /// The brew temperature in Fahrenheit. Typical espresso range: 190–205°F.
+  double temperatureF = 200.0;
+
+  /// Calculates the current brew ratio based on selected dose and output presets.
+  BrewRatio get brewRatio => BrewRatio(
+        dose: dosePreset.dose,
+        output: outputPreset.output,
+      );
+
+  /// Updates the coffee dose selected on this screen.
+  void onDoseSelected(DosePreset dosePreset) {
     setState(() {
-      _isLampOn = value;
+      this.dosePreset = dosePreset;
     });
   }
 
-  /// Getter for the current lamp state.
-  ///
-  /// Provides read-only access to the lamp state for the view layer.
-  bool get isLampOn => _isLampOn;
+  /// Updates the espresso output yield selected on this screen.
+  void onOutputSelected(OutputPreset outputPreset) {
+    setState(() {
+      this.outputPreset = outputPreset;
+    });
+  }
+
+  /// Updates the brew temperature.
+  void onTemperatureChanged(double temperature) {
+    setState(() {
+      temperatureF = temperature;
+    });
+  }
+
+  /// Handles submission of the selected brew profile parameters to start a brew.
+  void onConfirm() {
+    // TODO start the brew and navigate to the screen for monitoring the brew
+  }
 
   @override
   Widget build(BuildContext context) => HomeView(this);
