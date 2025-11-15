@@ -1,5 +1,5 @@
 name: first_crack
-description: "A Flutter app built with MVC architecture using Splendid standards."
+description: "Demonstration application showing how to build rich push notification experiences"
 publish_to: 'none'
 version: 1.0.0+1
 
