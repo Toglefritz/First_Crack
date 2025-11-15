@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'models/brew_profile.dart';
+import 'models/brew_stage.dart';
 
 /// Service responsible for managing the espresso brewing process.
 ///
@@ -12,6 +13,9 @@ class BrewService extends ChangeNotifier {
 
   /// Whether a brew is currently in progress.
   bool _isBrewing = false;
+
+  /// Current brew stage. The brewing process always starts with heating the water.
+  BrewStage _brewStage = BrewStage.heating;
 
   /// Current brew progress from 0.0 to 1.0.
   double _brewProgress = 0.0;
@@ -27,6 +31,9 @@ class BrewService extends ChangeNotifier {
 
   /// Gets whether a brew is currently in progress.
   bool get isBrewing => _isBrewing;
+
+  /// Gets the current brew stage.
+  BrewStage get brewStage => _brewStage;
 
   /// Gets the current brew progress (0.0 to 1.0).
   double get brewProgress => _brewProgress;
@@ -52,6 +59,7 @@ class BrewService extends ChangeNotifier {
     if (_isBrewing) return false;
 
     _isBrewing = true;
+    _brewStage = BrewStage.heating;
     _brewProgress = 0.0;
     _elapsedSeconds = 0.0;
     _currentYieldGrams = 0.0;
@@ -78,7 +86,7 @@ class BrewService extends ChangeNotifier {
     final double targetTime = _profile.autoStopMode == AutoStopMode.byTime ? _profile.shotTimeSeconds : 30.0;
     final double targetYield = _profile.yieldGrams;
 
-    while (_isBrewing && _brewProgress < 1.0) {
+    while (_isBrewing && _brewStage < BrewStage.complete) {
       await Future<void>.delayed(const Duration(milliseconds: 100));
 
       _elapsedSeconds += 0.1;
@@ -93,10 +101,24 @@ class BrewService extends ChangeNotifier {
         _brewProgress = (_currentYieldGrams / targetYield).clamp(0.0, 1.0);
       }
 
+      // Update brew stage based on progress
+      if (_brewProgress < 0.1) {
+        _brewStage = BrewStage.heating;
+      } else if (_brewProgress < 0.2) {
+        _brewStage = BrewStage.grinding;
+      } else if (_brewProgress < 0.3) {
+        _brewStage = BrewStage.preInfusion;
+      } else if (_brewProgress < 1.0) {
+        _brewStage = BrewStage.brewing;
+      } else {
+        _brewStage = BrewStage.complete;
+      }
+
       notifyListeners();
 
       // Auto-stop when complete
       if (_brewProgress >= 1.0) {
+        _brewStage = BrewStage.complete;
         stopBrew();
       }
     }
@@ -106,45 +128,10 @@ class BrewService extends ChangeNotifier {
   void reset() {
     _profile = const BrewingProfile();
     _isBrewing = false;
+    _brewStage = BrewStage.heating;
     _brewProgress = 0.0;
     _elapsedSeconds = 0.0;
     _currentYieldGrams = 0.0;
-    notifyListeners();
-  }
-
-  /// Updates the dose amount in grams.
-  void updateDose(double grams) {
-    _profile = _profile.copyWith(doseGrams: grams);
-    notifyListeners();
-  }
-
-  /// Updates the target yield in grams.
-  void updateYield(double grams) {
-    _profile = _profile.copyWith(yieldGrams: grams);
-    notifyListeners();
-  }
-
-  /// Updates the water temperature in Fahrenheit.
-  void updateTemperature(double temperatureF) {
-    _profile = _profile.copyWith(waterTemperatureF: temperatureF);
-    notifyListeners();
-  }
-
-  /// Updates the coffee type.
-  void updateCoffeeType(CoffeeType type) {
-    _profile = _profile.copyWith(coffeeType: type);
-    notifyListeners();
-  }
-
-  /// Updates the cup size.
-  void updateCupSize(CupSize size) {
-    _profile = _profile.copyWith(cupSize: size);
-    notifyListeners();
-  }
-
-  /// Updates the strength level (0.0 to 1.0).
-  void updateStrength(double strength) {
-    _profile = _profile.copyWith(strength: strength.clamp(0.0, 1.0));
     notifyListeners();
   }
 }

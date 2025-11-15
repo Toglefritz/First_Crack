@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../services/brew/models/brew_profile.dart';
 import '../../services/brew/models/brew_ratio.dart';
+import '../brew/brew_route.dart';
 import 'home_route.dart';
 import 'home_view.dart';
 import 'models/dose_preset.dart';
@@ -49,7 +51,20 @@ class HomeController extends State<HomeRoute> {
 
   /// Handles submission of the selected brew profile parameters to start a brew.
   void onConfirm() {
-    // TODO start the brew and navigate to the screen for monitoring the brew
+    // Create a BrewingProfile object based on the user's selections.
+    final BrewingProfile profile = BrewingProfile(
+      doseGrams: dosePreset.dose,
+      yieldGrams: outputPreset.output,
+      waterTemperatureF: temperatureF,
+    );
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => BrewRoute(
+          brewingProfile: profile,
+        ),
+      ),
+    );
   }
 
   @override

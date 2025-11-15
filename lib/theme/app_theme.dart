@@ -4,8 +4,8 @@ part of '../app.dart';
 class _AppTheme {
   /// The primary seed color used for generating the color scheme.
   ///
-  /// This rich gold color evokes the warm, inviting tones of espresso crema and serves as the foundation for both
-  /// light and dark themes, with Material 3 automatically generating complementary colors for various UI elements.
+  /// This rich gold color evokes the warm, inviting tones of espresso crema and serves as the foundation for both light
+  /// and dark themes, with Material 3 automatically generating complementary colors for various UI elements.
   static final Color _seedColor = Colors.amber[700]!;
 
   /// Light theme configuration for the application.

@@ -1,8 +1,8 @@
 /// Represents the brew ratio calculated from dose and output values.
 ///
 /// The brew ratio is expressed as a multiplier (e.g., 2.0 for a 1:2 ratio) and is calculated by dividing the output
-/// yield by the input dose. This ratio is a key parameter in espresso extraction that affects strength, flavor
-/// balance, and extraction efficiency.
+/// yield by the input dose. This ratio is a key parameter in espresso extraction that affects strength, flavor balance,
+/// and extraction efficiency.
 class BrewRatio {
   /// The coffee dose in grams (input).
   final double dose;

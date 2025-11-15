@@ -91,29 +91,89 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
-  /// No description provided for @appTitle.
+  /// The title of the app
   ///
   /// In en, this message translates to:
   /// **'First Crack'**
   String get appTitle;
 
-  /// No description provided for @dose.
+  /// Label for the main brewing stage where espresso is extracted
+  ///
+  /// In en, this message translates to:
+  /// **'Brewing'**
+  String get brewing;
+
+  /// Label for the final brew stage when extraction is finished
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get complete;
+
+  /// Label for the current espresso output weight during brewing
+  ///
+  /// In en, this message translates to:
+  /// **'Current Yield:'**
+  String get currentYield;
+
+  /// Label for the coffee dose amount in grams
   ///
   /// In en, this message translates to:
   /// **'Dose'**
   String get dose;
 
-  /// No description provided for @output.
+  /// Label for the grinding stage where coffee beans are ground
+  ///
+  /// In en, this message translates to:
+  /// **'Grinding'**
+  String get grinding;
+
+  /// Label for the heating stage where water is brought to temperature
+  ///
+  /// In en, this message translates to:
+  /// **'Heating'**
+  String get heating;
+
+  /// Label for the target espresso output yield in grams
   ///
   /// In en, this message translates to:
   /// **'Output'**
   String get output;
 
-  /// No description provided for @temperature.
+  /// Label for the pre-infusion stage where grounds are gently saturated
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-Infusion'**
+  String get preInfusion;
+
+  /// Label for the brew ratio (coffee dose to espresso output)
+  ///
+  /// In en, this message translates to:
+  /// **'Ratio'**
+  String get ratio;
+
+  /// Label indicating time remaining in the brew process
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get remaining;
+
+  /// Button label to stop the brewing process early
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Brew'**
+  String get stopBrew;
+
+  /// Label for the brew water temperature
   ///
   /// In en, this message translates to:
   /// **'Temperature'**
   String get temperature;
+
+  /// Label for the espresso output yield in grams
+  ///
+  /// In en, this message translates to:
+  /// **'Yield'**
+  String get yield;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

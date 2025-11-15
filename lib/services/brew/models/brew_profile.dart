@@ -1,6 +1,8 @@
 /// A configuration model describing all parameters used when preparing an espresso-based drink.
 library;
 
+import 'brew_ratio.dart';
+
 part 'flow_profile.dart';
 part 'pressure_profile.dart';
 part 'auto_stop_mode.dart';
@@ -23,7 +25,7 @@ class BrewingProfile {
   final double yieldGrams;
 
   /// Brew ratio expressed as a multiplier (e.g., 2.0 = 1:2 ratio). Typical espresso ratio: 1:2.0.
-  final double brewRatio;
+  final BrewRatio brewRatio;
 
   /// Brew water temperature in Fahrenheit. Typical espresso brewing temperature: 190–205°F.
   final double waterTemperatureF;
@@ -90,7 +92,7 @@ class BrewingProfile {
   const BrewingProfile({
     this.doseGrams = 18.0,
     this.yieldGrams = 36.0,
-    this.brewRatio = 2.0,
+    this.brewRatio = const BrewRatio(dose: 18.0, output: 36.0),
     this.waterTemperatureF = 200.0,
     this.preInfusionSeconds = 3.0,
     this.preInfusionPressureBar = 2.0,
@@ -114,7 +116,7 @@ class BrewingProfile {
   BrewingProfile copyWith({
     double? doseGrams,
     double? yieldGrams,
-    double? brewRatio,
+    BrewRatio? brewRatio,
     double? waterTemperatureF,
     double? preInfusionSeconds,
     double? preInfusionPressureBar,
@@ -139,8 +141,7 @@ class BrewingProfile {
       brewRatio: brewRatio ?? this.brewRatio,
       waterTemperatureF: waterTemperatureF ?? this.waterTemperatureF,
       preInfusionSeconds: preInfusionSeconds ?? this.preInfusionSeconds,
-      preInfusionPressureBar:
-          preInfusionPressureBar ?? this.preInfusionPressureBar,
+      preInfusionPressureBar: preInfusionPressureBar ?? this.preInfusionPressureBar,
       pumpPressureBar: pumpPressureBar ?? this.pumpPressureBar,
       flowProfile: flowProfile ?? this.flowProfile,
       pressureProfile: pressureProfile ?? this.pressureProfile,

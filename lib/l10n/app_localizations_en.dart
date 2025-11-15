@@ -12,11 +12,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'First Crack';
 
   @override
+  String get brewing => 'Brewing';
+
+  @override
+  String get complete => 'Complete';
+
+  @override
+  String get currentYield => 'Current Yield:';
+
+  @override
   String get dose => 'Dose';
+
+  @override
+  String get grinding => 'Grinding';
+
+  @override
+  String get heating => 'Heating';
 
   @override
   String get output => 'Output';
 
   @override
+  String get preInfusion => 'Pre-Infusion';
+
+  @override
+  String get ratio => 'Ratio';
+
+  @override
+  String get remaining => 'Remaining';
+
+  @override
+  String get stopBrew => 'Stop Brew';
+
+  @override
   String get temperature => 'Temperature';
+
+  @override
+  String get yield => 'Yield';
 }

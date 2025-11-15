@@ -1,6 +1,59 @@
 {
+  "@@locale": "en",
   "appTitle": "First Crack",
+  "@appTitle": {
+    "description": "The title of the app"
+  },
+  "brewing": "Brewing",
+  "@brewing": {
+    "description": "Label for the main brewing stage where espresso is extracted"
+  },
+  "complete": "Complete",
+  "@complete": {
+    "description": "Label for the final brew stage when extraction is finished"
+  },
+  "currentYield": "Current Yield:",
+  "@currentYield": {
+    "description": "Label for the current espresso output weight during brewing"
+  },
   "dose": "Dose",
+  "@dose": {
+    "description": "Label for the coffee dose amount in grams"
+  },
+  "grinding": "Grinding",
+  "@grinding": {
+    "description": "Label for the grinding stage where coffee beans are ground"
+  },
+  "heating": "Heating",
+  "@heating": {
+    "description": "Label for the heating stage where water is brought to temperature"
+  },
   "output": "Output",
-  "temperature": "Temperature"
+  "@output": {
+    "description": "Label for the target espresso output yield in grams"
+  },
+  "preInfusion": "Pre-Infusion",
+  "@preInfusion": {
+    "description": "Label for the pre-infusion stage where grounds are gently saturated"
+  },
+  "ratio": "Ratio",
+  "@ratio": {
+    "description": "Label for the brew ratio (coffee dose to espresso output)"
+  },
+  "remaining": "Remaining",
+  "@remaining": {
+    "description": "Label indicating time remaining in the brew process"
+  },
+  "stopBrew": "Stop Brew",
+  "@stopBrew": {
+    "description": "Button label to stop the brewing process early"
+  },
+  "temperature": "Temperature",
+  "@temperature": {
+    "description": "Label for the brew water temperature"
+  },
+  "yield": "Yield",
+  "@yield": {
+    "description": "Label for the espresso output yield in grams"
+  }
 }
