@@ -1,0 +1,14 @@
+{
+  "appTitle": "First Crack",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "lampOff": "OFF",
+  "@lampOff": {
+    "description": "Label for the lamp switch when it is in the off position"
+  },
+  "lampOn": "ON",
+  "@lampOn": {
+    "description": "Label for the lamp switch when it is in the on position"
+  }
+}
