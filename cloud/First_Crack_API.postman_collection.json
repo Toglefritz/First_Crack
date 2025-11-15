@@ -1,0 +1,607 @@
+{
+  "info": {
+    "name": "First Crack API",
+    "description": "Postman collection for testing the First Crack Firebase Cloud Functions backend. This collection includes requests for starting brew simulations and health checks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "first-crack"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://us-central1-your-project-id.cloudfunctions.net",
+      "type": "string",
+      "description": "Base URL for your Firebase Cloud Functions. Replace 'your-project-id' with your actual Firebase project ID."
+    },
+    {
+      "key": "fcm_token",
+      "value": "YOUR_FCM_TOKEN_HERE",
+      "type": "string",
+      "description": "FCM device token obtained from your Flutter app. Must be 100+ characters."
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has correct structure\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('status');",
+              "    pm.expect(jsonData).to.have.property('service');",
+              "    pm.expect(jsonData).to.have.property('version');",
+              "    pm.expect(jsonData).to.have.property('timestamp');",
+              "});",
+              "",
+              "pm.test(\"Service is healthy\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql('healthy');",
+              "    pm.expect(jsonData.service).to.eql('first-crack-cloud');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Health check endpoint to verify the service is running. Returns service status, name, version, and timestamp."
+      },
+      "response": [
+        {
+          "name": "Success",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"status\": \"healthy\",\n  \"service\": \"first-crack-cloud\",\n  \"version\": \"1.0.0\",\n  \"timestamp\": \"2025-11-15T10:30:00.000Z\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Start Brew - Espresso",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has correct structure\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success');",
+              "    pm.expect(jsonData).to.have.property('brewId');",
+              "    pm.expect(jsonData).to.have.property('message');",
+              "    pm.expect(jsonData).to.have.property('stages');",
+              "    pm.expect(jsonData).to.have.property('estimatedDuration');",
+              "});",
+              "",
+              "pm.test(\"Brew started successfully\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "    pm.expect(jsonData.stages).to.eql(7);",
+              "    pm.expect(jsonData.estimatedDuration).to.eql(90);",
+              "});",
+              "",
+              "pm.test(\"Brew ID is valid\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.brewId).to.match(/^brew_\\d+_\\d+$/);",
+              "});",
+              "",
+              "// Save brewId for potential future requests",
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set(\"last_brew_id\", jsonData.brewId);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"deviceToken\": \"{{fcm_token}}\",\n  \"brewType\": \"espresso\",\n  \"dose\": 18,\n  \"targetTemp\": 93,\n  \"targetPressure\": 9\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/startBrew",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "startBrew"
+          ]
+        },
+        "description": "Start a standard espresso brew simulation with typical parameters:\n- 18g dose\n- 93°C temperature\n- 9 bar pressure\n\nThis will send 7 notifications over 90 seconds simulating the brew cycle."
+      },
+      "response": [
+        {
+          "name": "Success",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"fGcI8xKLRZe...\",\n  \"brewType\": \"espresso\",\n  \"dose\": 18,\n  \"targetTemp\": 93,\n  \"targetPressure\": 9\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/startBrew",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "startBrew"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"brewId\": \"brew_1234567890_5678\",\n  \"message\": \"Brew simulation started\",\n  \"stages\": 7,\n  \"estimatedDuration\": 90\n}"
+        },
+        {
+          "name": "Invalid Token",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"short_token\",\n  \"brewType\": \"espresso\",\n  \"dose\": 18,\n  \"targetTemp\": 93,\n  \"targetPressure\": 9\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/startBrew",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "startBrew"
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": \"Invalid FCM device token format\"\n}"
+        },
+        {
+          "name": "Invalid Parameters",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceToken\": \"fGcI8xKLRZe...\",\n  \"brewType\": \"espresso\",\n  \"dose\": 5,\n  \"targetTemp\": 150,\n  \"targetPressure\": 20\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/startBrew",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "startBrew"
+              ]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": \"Invalid request parameters\",\n  \"details\": [\n    \"Dose must be between 10 and 30 grams\",\n    \"Target temperature must be between 85 and 100°C\",\n    \"Target pressure must be between 5 and 15 bar\"\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Start Brew - Lungo",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Brew started successfully\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"deviceToken\": \"{{fcm_token}}\",\n  \"brewType\": \"lungo\",\n  \"dose\": 16,\n  \"targetTemp\": 92,\n  \"targetPressure\": 8,\n  \"extractionTime\": 35\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/startBrew",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "startBrew"
+          ]
+        },
+        "description": "Start a lungo brew simulation with longer extraction time:\n- 16g dose\n- 92°C temperature\n- 8 bar pressure\n- 35s extraction time"
+      },
+      "response": []
+    },
+    {
+      "name": "Start Brew - Ristretto",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Brew started successfully\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"deviceToken\": \"{{fcm_token}}\",\n  \"brewType\": \"ristretto\",\n  \"dose\": 20,\n  \"targetTemp\": 94,\n  \"targetPressure\": 10,\n  \"extractionTime\": 20\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/startBrew",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "startBrew"
+          ]
+        },
+        "description": "Start a ristretto brew simulation with shorter extraction:\n- 20g dose\n- 94°C temperature\n- 10 bar pressure\n- 20s extraction time"
+      },
+      "response": []
+    },
+    {
+      "name": "Start Brew - With Pre-infusion",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Brew started successfully\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"deviceToken\": \"{{fcm_token}}\",\n  \"brewType\": \"espresso\",\n  \"dose\": 18,\n  \"targetTemp\": 93,\n  \"targetPressure\": 9,\n  \"preinfusionDuration\": 12,\n  \"extractionTime\": 28\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/startBrew",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "startBrew"
+          ]
+        },
+        "description": "Start an espresso brew with custom pre-infusion duration:\n- 18g dose\n- 93°C temperature\n- 9 bar pressure\n- 12s pre-infusion (longer than default)\n- 28s extraction time"
+      },
+      "response": []
+    },
+    {
+      "name": "Start Brew - Invalid Method (GET)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 405\", function () {",
+              "    pm.response.to.have.status(405);",
+              "});",
+              "",
+              "pm.test(\"Error message is correct\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.include('Method not allowed');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/startBrew",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "startBrew"
+          ]
+        },
+        "description": "Test that GET requests are rejected (only POST is allowed)."
+      },
+      "response": [
+        {
+          "name": "Method Not Allowed",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/startBrew",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "startBrew"
+              ]
+            }
+          },
+          "status": "Method Not Allowed",
+          "code": 405,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"error\": \"Method not allowed. Use POST.\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Start Brew - Missing Required Fields",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Error indicates invalid parameters\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.error).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"deviceToken\": \"{{fcm_token}}\",\n  \"brewType\": \"espresso\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/startBrew",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "startBrew"
+          ]
+        },
+        "description": "Test validation by omitting required fields (dose, targetTemp, targetPressure)."
+      },
+      "response": []
+    },
+    {
+      "name": "Start Brew - Invalid Brew Type",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Error mentions invalid brew type\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.details).to.exist;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"deviceToken\": \"{{fcm_token}}\",\n  \"brewType\": \"cappuccino\",\n  \"dose\": 18,\n  \"targetTemp\": 93,\n  \"targetPressure\": 9\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/startBrew",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "startBrew"
+          ]
+        },
+        "description": "Test validation with an invalid brew type. Valid types are: espresso, lungo, ristretto, americano."
+      },
+      "response": []
+    },
+    {
+      "name": "Start Brew - Out of Range Values",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "pm.test(\"Error details include range violations\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.be.false;",
+              "    pm.expect(jsonData.details).to.be.an('array');",
+              "    pm.expect(jsonData.details.length).to.be.greaterThan(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"deviceToken\": \"{{fcm_token}}\",\n  \"brewType\": \"espresso\",\n  \"dose\": 5,\n  \"targetTemp\": 150,\n  \"targetPressure\": 20\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/startBrew",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "startBrew"
+          ]
+        },
+        "description": "Test validation with out-of-range values:\n- dose: 5g (min: 10g)\n- targetTemp: 150°C (max: 100°C)\n- targetPressure: 20 bar (max: 15 bar)"
+      },
+      "response": []
+    }
+  ]
+}
