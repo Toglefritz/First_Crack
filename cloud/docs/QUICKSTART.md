@@ -134,15 +134,13 @@ Expected response:
 
 ## Step 9: Watch for Notifications
 
-Your device should receive 7 notifications over 90 seconds:
+Your device should receive 5 notifications over 75 seconds:
 
 1. **t+0s**: "Heating Water"
-2. **t+30s**: "Ready to Brew" (with action buttons)
-3. **t+35s**: "Pre-infusion Started"
-4. **t+50s**: "Pre-infusion Complete"
-5. **t+60s**: "Extraction in Progress" (with video)
-6. **t+80s**: "Extraction Complete"
-7. **t+90s**: "Your Espresso is Ready! ☕"
+2. **t+30s**: "Grinding Beans"
+3. **t+30s**: "Pre-infusion"
+4. **t+45s**: "Brewing" (with video and action buttons)
+5. **t+75s**: "Your Espresso is Ready! ☕"
 
 ## Troubleshooting
 

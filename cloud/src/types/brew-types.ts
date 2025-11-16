@@ -12,15 +12,14 @@ export type BrewType = "espresso" | "lungo" | "ristretto" | "americano";
 
 /**
  * Brew stage identifiers
+ * Matches the BrewStage enum defined in the Flutter app
  */
 export type BrewStage =
   | "heating"
-  | "ready"
-  | "preinfusion_start"
-  | "preinfusion_complete"
-  | "extraction_progress"
-  | "extraction_complete"
-  | "brew_complete";
+  | "grinding"
+  | "preInfusion"
+  | "brewing"
+  | "complete";
 
 /**
  * Parameters for starting a brew simulation

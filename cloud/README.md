@@ -105,8 +105,8 @@ curl -X POST https://YOUR_REGION-YOUR_PROJECT.cloudfunctions.net/startBrew \
   "success": true,
   "brewId": "brew_1234567890",
   "message": "Brew simulation started",
-  "stages": 7,
-  "estimatedDuration": 90
+  "stages": 5,
+  "estimatedDuration": 75
 }
 ```
 
@@ -115,12 +115,10 @@ curl -X POST https://YOUR_REGION-YOUR_PROJECT.cloudfunctions.net/startBrew \
 The backend sends notifications at the following stages:
 
 1. **Heating** (t+0s) - Machine is heating water
-2. **Ready** (t+30s) - Ready to brew with action buttons
-3. **Pre-infusion Start** (t+35s) - Pre-infusion begins with image
-4. **Pre-infusion Complete** (t+50s) - Pre-infusion done, extraction starting
-5. **Extraction Progress** (t+60s) - Mid-extraction with video/live feed
-6. **Extraction Complete** (t+80s) - Extraction finishing
-7. **Brew Complete** (t+90s) - Final notification with result image
+2. **Grinding** (t+30s) - Grinding fresh coffee beans
+3. **Pre-infusion** (t+30s) - Pre-infusion begins, saturating coffee puck
+4. **Brewing** (t+45s) - Active extraction with video/live feed
+5. **Complete** (t+75s) - Final notification with result image
 
 Each notification includes:
 - Stage-specific title and body text
@@ -224,7 +222,7 @@ Firebase Cloud Functions pricing is based on:
 - Outbound networking
 
 For this demo app:
-- Each brew simulation = 1 function invocation + 7 FCM messages
+- Each brew simulation = 1 function invocation + 5 FCM messages
 - Estimated cost: < $0.01 per brew simulation
 - Free tier: 2M invocations/month
 

@@ -56,6 +56,14 @@ export const MEDIA_BASE_URL = process.env.MEDIA_BASE_URL ||
 /**
  * Complete brew stage timeline
  * Defines all notifications sent during a brew simulation
+ * Matches the BrewStage enum and timing defined in the Flutter app
+ * 
+ * Timing breakdown (matches brew_service.dart):
+ * - Heating: 0-30s (30s duration)
+ * - Grinding: 30s (instant notification)
+ * - Pre-infusion: 30-45s (15s duration)
+ * - Brewing: 45-75s (30s duration)
+ * - Complete: 75s
  */
 export const BREW_STAGES: StageConfig[] = [
   {
@@ -63,71 +71,38 @@ export const BREW_STAGES: StageConfig[] = [
     delaySeconds: 0,
     title: "Heating Water",
     body: "Your espresso machine is heating to the perfect temperature...",
-    imageUrl: "/images/machine-heating.jpg",
-    deepLink: "firstcrack://brew/status",
-    progress: 10,
+    imageUrl: "/images/heating.png",
+    deepLink: "firstcrack://brew/heating",
+    progress: 0,
     highPriority: false,
   },
   {
-    stage: "ready",
+    stage: "grinding",
     delaySeconds: 30,
-    title: "Ready to Brew",
-    body: "Water temperature reached 93°C. Start your brew?",
-    imageUrl: "/images/machine-ready.jpg",
-    actions: [
-      {
-        id: "start_brew",
-        title: "Start Brew",
-        icon: "play",
-        requiresForeground: false,
-        deepLink: "firstcrack://brew/start",
-      },
-      {
-        id: "adjust_temp",
-        title: "Adjust Temp",
-        icon: "settings",
-        requiresForeground: true,
-        deepLink: "firstcrack://brew/settings",
-      },
-      {
-        id: "cancel",
-        title: "Cancel",
-        icon: "close",
-        requiresForeground: false,
-      },
-    ],
-    deepLink: "firstcrack://brew/ready",
-    progress: 30,
-    highPriority: true,
-    requireInteraction: true,
-  },
-  {
-    stage: "preinfusion_start",
-    delaySeconds: 35,
-    title: "Pre-infusion Started",
-    body: "Gently saturating the coffee puck at 2 bar...",
-    imageUrl: "/images/preinfusion.jpg",
-    deepLink: "firstcrack://brew/preinfusion",
+    title: "Grinding Beans",
+    body: "Grinding fresh coffee beans to the perfect particle size...",
+    imageUrl: "/images/grinding.png",
+    deepLink: "firstcrack://brew/grinding",
     progress: 40,
-    highPriority: true,
-  },
-  {
-    stage: "preinfusion_complete",
-    delaySeconds: 50,
-    title: "Pre-infusion Complete",
-    body: "Ramping up to 9 bar for extraction...",
-    imageUrl: "/images/extraction-start.jpg",
-    deepLink: "firstcrack://brew/extraction",
-    progress: 55,
     highPriority: false,
   },
   {
-    stage: "extraction_progress",
-    delaySeconds: 60,
-    title: "Extraction in Progress",
-    body: "Beautiful crema forming. 15ml extracted so far.",
+    stage: "preInfusion",
+    delaySeconds: 30,
+    title: "Pre-infusion",
+    body: "Gently saturating the coffee puck at 2 bar...",
+    imageUrl: "/images/pre_infusion.png",
+    deepLink: "firstcrack://brew/preinfusion",
+    progress: 60,
+    highPriority: true,
+  },
+  {
+    stage: "brewing",
+    delaySeconds: 45,
+    title: "Brewing",
+    body: "Extracting espresso at 9 bar. Beautiful crema forming...",
     videoUrl: "/videos/extraction-live.mp4",
-    imageUrl: "/images/extraction-progress.jpg",
+    imageUrl: "/images/brewing.png",
     actions: [
       {
         id: "view_live",
@@ -143,26 +118,16 @@ export const BREW_STAGES: StageConfig[] = [
         requiresForeground: false,
       },
     ],
-    deepLink: "firstcrack://brew/extraction",
-    progress: 70,
+    deepLink: "firstcrack://brew/brewing",
+    progress: 80,
     highPriority: true,
   },
   {
-    stage: "extraction_complete",
-    delaySeconds: 80,
-    title: "Extraction Complete",
-    body: "36ml extracted in 28 seconds. Finishing up...",
-    imageUrl: "/images/extraction-complete.jpg",
-    deepLink: "firstcrack://brew/complete",
-    progress: 95,
-    highPriority: false,
-  },
-  {
-    stage: "brew_complete",
-    delaySeconds: 90,
+    stage: "complete",
+    delaySeconds: 75,
     title: "Your Espresso is Ready! ☕",
     body: "Perfect extraction: 36ml in 28s at 93°C. Enjoy!",
-    imageUrl: "/images/espresso-complete.jpg",
+    imageUrl: "/images/brew_complete.png",
     actions: [
       {
         id: "view_details",

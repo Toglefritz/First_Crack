@@ -123,7 +123,7 @@ function buildNotificationData(
   const remainingTime = brewState.extractionTime - elapsedTime;
 
   const data: NotificationData = {
-    type: stageConfig.stage === "brew_complete" ?
+    type: stageConfig.stage === "complete" ?
       "brew_complete" : "brew_stage",
     stage: stageConfig.stage,
     brewId: brewState.brewId,
@@ -161,9 +161,8 @@ function buildNotificationData(
     data.remainingTime = String(remainingTime);
   }
 
-  // Add extraction-specific data
-  if (stageConfig.stage === "extraction_progress" ||
-      stageConfig.stage === "extraction_complete") {
+  // Add extraction-specific data for brewing stage
+  if (stageConfig.stage === "brewing") {
     data.flowRate = "2.5"; // ml/s
     data.volumeExtracted = String(Math.floor(elapsedTime * 1.3)); // Rough calc
   }

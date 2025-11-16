@@ -108,12 +108,10 @@ The `stage` field indicates the current brew stage:
 | Stage | Description | Category | Typical Actions |
 |-------|-------------|----------|-----------------|
 | `heating` | Machine is heating water | - | None |
-| `ready` | Ready to brew | `BREW_READY` | Start Brew, Adjust Temp, Cancel |
-| `preinfusion_start` | Pre-infusion beginning | - | None |
-| `preinfusion_complete` | Pre-infusion done, ramping pressure | - | None |
-| `extraction_progress` | Active extraction | `BREW_EXTRACTION` | View Live, Stop Now |
-| `extraction_complete` | Extraction finishing | - | None |
-| `brew_complete` | Brew finished | `BREW_COMPLETE` | View Details, Brew Again, Share |
+| `grinding` | Grinding fresh coffee beans | - | None |
+| `preInfusion` | Pre-infusion, saturating coffee puck | - | None |
+| `brewing` | Active extraction | `BREW_EXTRACTION` | View Live, Stop Now |
+| `complete` | Brew finished | `BREW_COMPLETE` | View Details, Brew Again, Share |
 
 ## Notification Categories
 
@@ -123,7 +121,6 @@ Notification categories enable action buttons on iOS/macOS. The `category` field
 
 | Category | When to Use | Actions |
 |----------|-------------|---------|
-| `BREW_READY` | Machine is heated and ready to start brewing | Start Brew, Adjust Temp, Cancel |
 | `BREW_EXTRACTION` | Coffee is actively extracting | View Live, Stop Now |
 | `BREW_COMPLETE` | Brew has finished successfully | View Details, Brew Again, Share |
 
@@ -134,15 +131,14 @@ Use this mapping in your backend to automatically set the correct category:
 ```typescript
 function getCategoryForStage(stage: string): string | undefined {
   const categoryMap: Record<string, string> = {
-    'ready': 'BREW_READY',
-    'extraction_progress': 'BREW_EXTRACTION',
-    'brew_complete': 'BREW_COMPLETE'
+    'brewing': 'BREW_EXTRACTION',
+    'complete': 'BREW_COMPLETE'
   };
   return categoryMap[stage];
 }
 ```
 
-**Note:** Only stages with interactive actions need a category. Other stages (heating, preinfusion, etc.)
+**Note:** Only stages with interactive actions need a category. Other stages (heating, grinding, preInfusion)
 should not include a category field.
 
 ## Actions Structure
@@ -231,7 +227,7 @@ apns: {
       sound: "default",
       badge: 1,
       "mutable-content": 1,  // Enables Notification Service Extension
-      category?: string      // Notification category: "BREW_READY", "BREW_EXTRACTION", or "BREW_COMPLETE"
+      category?: string      // Notification category: "BREW_EXTRACTION" or "BREW_COMPLETE"
     }
   }
 }
@@ -292,21 +288,20 @@ webpush: {
 }
 ```
 
-### Stage 2: Ready (with Actions)
+### Stage 2: Grinding
 
 ```json
 {
   "token": "fGcI8xKLRZe...",
   "data": {
     "type": "brew_stage",
-    "stage": "ready",
+    "stage": "grinding",
     "brewId": "brew_1234567890_5678",
-    "title": "Ready to Brew",
-    "body": "Water temperature reached 93°C. Start your brew?",
-    "imageUrl": "https://cdn.example.com/images/machine-ready.jpg",
-    "actions": "[{\"id\":\"start_brew\",\"title\":\"Start Brew\",\"icon\":\"play\",\"requiresForeground\":false,\"deepLink\":\"firstcrack://brew/start\"},{\"id\":\"adjust_temp\",\"title\":\"Adjust Temp\",\"icon\":\"settings\",\"requiresForeground\":true,\"deepLink\":\"firstcrack://brew/settings\"},{\"id\":\"cancel\",\"title\":\"Cancel\",\"icon\":\"close\",\"requiresForeground\":false}]",
-    "deepLink": "firstcrack://brew/ready",
-    "progress": "30",
+    "title": "Grinding Beans",
+    "body": "Grinding fresh coffee beans to the perfect particle size...",
+    "imageUrl": "https://cdn.example.com/images/grinding.png",
+    "deepLink": "firstcrack://brew/grinding",
+    "progress": "40",
     "brewType": "espresso",
     "dose": "18",
     "temperature": "93",
@@ -316,46 +311,46 @@ webpush: {
 }
 ```
 
-### Stage 5: Extraction Progress (with Video)
+### Stage 4: Brewing (with Video and Actions)
 
 ```json
 {
   "token": "fGcI8xKLRZe...",
   "data": {
     "type": "brew_stage",
-    "stage": "extraction_progress",
+    "stage": "brewing",
     "brewId": "brew_1234567890_5678",
-    "title": "Extraction in Progress",
-    "body": "Beautiful crema forming. 15ml extracted so far.",
-    "imageUrl": "https://cdn.example.com/images/extraction-progress.jpg",
+    "title": "Brewing",
+    "body": "Extracting espresso at 9 bar. Beautiful crema forming...",
+    "imageUrl": "https://cdn.example.com/images/brewing.png",
     "videoUrl": "https://cdn.example.com/videos/extraction-live.mp4",
     "actions": "[{\"id\":\"view_live\",\"title\":\"View Live\",\"icon\":\"videocam\",\"requiresForeground\":true,\"deepLink\":\"firstcrack://brew/live\"},{\"id\":\"stop_early\",\"title\":\"Stop Now\",\"icon\":\"stop\",\"requiresForeground\":false}]",
-    "deepLink": "firstcrack://brew/extraction",
-    "progress": "70",
+    "deepLink": "firstcrack://brew/brewing",
+    "progress": "80",
     "brewType": "espresso",
     "dose": "18",
     "temperature": "93",
     "pressure": "9",
-    "elapsedTime": "60",
-    "remainingTime": "20",
+    "elapsedTime": "45",
+    "remainingTime": "30",
     "flowRate": "2.5",
     "volumeExtracted": "15"
   }
 }
 ```
 
-### Stage 7: Brew Complete
+### Stage 5: Complete
 
 ```json
 {
   "token": "fGcI8xKLRZe...",
   "data": {
     "type": "brew_complete",
-    "stage": "brew_complete",
+    "stage": "complete",
     "brewId": "brew_1234567890_5678",
     "title": "Your Espresso is Ready! ☕",
     "body": "Perfect extraction: 36ml in 28s at 93°C. Enjoy!",
-    "imageUrl": "https://cdn.example.com/images/espresso-complete.jpg",
+    "imageUrl": "https://cdn.example.com/images/brew_complete.png",
     "actions": "[{\"id\":\"view_details\",\"title\":\"View Details\",\"icon\":\"info\",\"requiresForeground\":true,\"deepLink\":\"firstcrack://brew/details\"},{\"id\":\"brew_again\",\"title\":\"Brew Again\",\"icon\":\"refresh\",\"requiresForeground\":false,\"deepLink\":\"firstcrack://brew/new\"},{\"id\":\"share\",\"title\":\"Share\",\"icon\":\"share\",\"requiresForeground\":true,\"deepLink\":\"firstcrack://brew/share\"}]",
     "deepLink": "firstcrack://brew/complete",
     "progress": "100",
@@ -363,7 +358,7 @@ webpush: {
     "dose": "18",
     "temperature": "93",
     "pressure": "9",
-    "elapsedTime": "90",
+    "elapsedTime": "75",
     "flowRate": "2.5",
     "volumeExtracted": "36"
   }
@@ -428,7 +423,7 @@ curl -X POST https://fcm.googleapis.com/v1/projects/YOUR_PROJECT/messages:send \
       "token": "DEVICE_TOKEN",
       "data": {
         "type": "brew_stage",
-        "stage": "ready",
+        "stage": "heating",
         "brewId": "test_123",
         "title": "Test Notification",
         "body": "Testing rich notifications",
