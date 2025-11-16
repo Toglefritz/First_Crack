@@ -12,7 +12,7 @@ class NotificationData {
   final NotificationType type;
 
   /// Current brew stage identifier.
-  final PNSBrewStage stage;
+  final BrewStage stage;
 
   /// Unique identifier for this brew session.
   final String brewId;
@@ -108,7 +108,7 @@ class NotificationData {
     );
 
     // Parse brew stage
-    final PNSBrewStage stage = PNSBrewStage.fromString(
+    final BrewStage stage = BrewStage.fromString(
       map['stage'] as String? ?? 'heating',
     );
 
@@ -157,7 +157,7 @@ class NotificationData {
   String toJson() {
     return jsonEncode(<String, dynamic>{
       'type': type.value,
-      'stage': stage.value,
+      'stage': stage.name,
       'brewId': brewId,
       'title': title,
       'body': body,

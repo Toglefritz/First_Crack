@@ -98,7 +98,7 @@ class BrewView extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: Insets.medium),
                     child: Text(
-                      state.brewStage.label(context),
+                      state.brewStage.localizedLabel(context),
                       style: Theme.of(context).textTheme.displayMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: context.colorScheme.inverseSurface,

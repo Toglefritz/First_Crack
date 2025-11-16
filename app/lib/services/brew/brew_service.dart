@@ -44,6 +44,20 @@ class BrewService extends ChangeNotifier {
   /// Gets the current extraction yield in grams.
   double get currentYieldGrams => _currentYieldGrams;
 
+  // MARK: Simulated Durations
+
+  /// Simulated duration for the heating portion of the brew.
+  final double heatingDuration = 30.0;
+
+  /// Simulated duration for the pre-infusion portion of the brew.
+  final double preInfusionDuration = 15.0;
+
+  /// Simulated duration for the extraction portion of the brew.
+  final double extractionDuration = 30.0;
+
+  /// Total duration of the brewing process.
+  double get totalDuration => heatingDuration + preInfusionDuration + extractionDuration; // 75 seconds
+
   /// Updates the brewing profile with new parameters.
   ///
   /// This method allows partial updates using the profile's copyWith method.
@@ -83,12 +97,6 @@ class BrewService extends ChangeNotifier {
 
   /// Simulates the brewing process for the imaginary coffee machine with which this service interacts.
   Future<void> _simulateBrew() async {
-    // Duration constants matching cloud simulator
-    const double heatingDuration = 30.0;
-    const double preInfusionDuration = 15.0;
-    const double extractionDuration = 30.0;
-    const double totalDuration = heatingDuration + preInfusionDuration + extractionDuration; // 75 seconds
-
     final double targetYield = _profile.yieldGrams;
 
     while (_isBrewing && _brewStage < BrewStage.complete) {

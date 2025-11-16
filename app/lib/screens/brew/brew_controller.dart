@@ -51,10 +51,10 @@ class BrewController extends State<BrewRoute> {
 
   /// Gets the estimated time remaining in seconds.
   double get timeRemaining {
-    final double targetTime = _brewService.profile.shotTimeSeconds;
+    final double totalTime = _brewService.totalDuration;
     final double elapsed = _brewService.elapsedSeconds;
 
-    return (targetTime - elapsed).clamp(0.0, targetTime);
+    return (totalTime - elapsed).clamp(0.0, totalTime);
   }
 
   /// Cancels a brew.

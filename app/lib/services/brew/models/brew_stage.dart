@@ -40,20 +40,22 @@ enum BrewStage {
   /// the target yield has been achieved or the brew was manually stopped.
   complete;
 
+  /// Creates a [BrewStage] from a string value.
+  ///
+  /// Returns [heating] if the string doesn't match any known stage.
+  factory BrewStage.fromString(String value) {
+    return values.firstWhere(
+      (stage) => stage.name.toLowerCase() == value.toLowerCase(),
+      orElse: () => BrewStage.heating,
+    );
+  }
+
   /// Returns identifier for the [BrewStage] displayed in the UI.
-  String label(BuildContext context) {
-    switch (this) {
-      case BrewStage.heating:
-        return context.l10n.heating;
-      case BrewStage.grinding:
-        return context.l10n.grinding;
-      case BrewStage.preInfusion:
-        return context.l10n.preInfusion;
-      case BrewStage.brewing:
-        return context.l10n.brewing;
-      case BrewStage.complete:
-        return context.l10n.complete;
-    }
+  ///
+  /// Note: This is a non-localized identifier. For localized labels,
+  /// use the extension method `localizedLabel(context)` at the UI layer.
+  String get label {
+    return name;
   }
 
   /// Returns an file path to an image associated with each [BrewStage].
@@ -78,6 +80,25 @@ enum BrewStage {
 
 /// Extensions on the [BrewStage] enum.
 extension BrewStageX on BrewStage {
+  /// Returns the localized label for this brew stage.
+  ///
+  /// This should be used in UI code where BuildContext is available.
+  /// For service/business logic, use the non-localized `label` getter instead.
+  String localizedLabel(BuildContext context) {
+    switch (this) {
+      case BrewStage.heating:
+        return context.l10n.heating;
+      case BrewStage.grinding:
+        return context.l10n.grinding;
+      case BrewStage.preInfusion:
+        return context.l10n.preInfusion;
+      case BrewStage.brewing:
+        return context.l10n.brewing;
+      case BrewStage.complete:
+        return context.l10n.complete;
+    }
+  }
+
   /// Determines if this brew stage is "less than" the provided stage in terms of occurring before it in the brew
   /// process.
   bool operator <(BrewStage other) {

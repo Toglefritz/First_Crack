@@ -49,3 +49,4 @@ app/ios/Runner/GoogleService-Info.plist
 app/macos/Runner/GoogleService-Info.plist
 app/android/app/google-services.json
 app/firebase.json
+/.kiro
