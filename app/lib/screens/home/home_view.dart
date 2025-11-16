@@ -38,12 +38,14 @@ class HomeView extends StatelessWidget {
           Positioned(
             top: Insets.xSmall,
             left: Insets.small,
-            child: Text(
-              context.l10n.appTitle,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: context.colorScheme.inverseSurface,
-                  ),
+            child: SafeArea(
+              child: Text(
+                context.l10n.appTitle,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: context.colorScheme.inverseSurface,
+                    ),
+              ),
             ),
           ),
 
@@ -72,18 +74,16 @@ class HomeView extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: () => state.onDoseSelected(preset),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: isSelected
-                              ? context.colorScheme.inversePrimary
-                              : context.colorScheme.surface,
+                          backgroundColor:
+                              isSelected ? context.colorScheme.inversePrimary : context.colorScheme.surface,
                           foregroundColor:
                               isSelected ? context.colorScheme.primary : Theme.of(context).primaryColorDark,
                         ),
                         child: Text(
                           '${preset.dose.toInt()}g',
                           style: TextStyle(
-                            color: isSelected
-                                ? context.colorScheme.inverseSurface
-                                : Theme.of(context).primaryColorLight,
+                            color:
+                                isSelected ? context.colorScheme.inverseSurface : Theme.of(context).primaryColorLight,
                           ),
                         ),
                       ),
@@ -119,18 +119,16 @@ class HomeView extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: () => state.onOutputSelected(preset),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: isSelected
-                              ? context.colorScheme.inversePrimary
-                              : context.colorScheme.surface,
+                          backgroundColor:
+                              isSelected ? context.colorScheme.inversePrimary : context.colorScheme.surface,
                           foregroundColor:
                               isSelected ? context.colorScheme.primary : Theme.of(context).primaryColorDark,
                         ),
                         child: Text(
                           '${preset.output.toInt()}g',
                           style: TextStyle(
-                            color: isSelected
-                                ? context.colorScheme.inverseSurface
-                                : Theme.of(context).primaryColorLight,
+                            color:
+                                isSelected ? context.colorScheme.inverseSurface : Theme.of(context).primaryColorLight,
                           ),
                         ),
                       ),
@@ -146,56 +144,57 @@ class HomeView extends StatelessWidget {
             bottom: Insets.large,
             left: Insets.xxLarge,
             right: Insets.xxLarge,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      context.l10n.temperature,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        context.l10n.temperature,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      Text(
+                        '${state.temperatureF.toInt()}°F',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(128),
+                      border: Border.all(
+                        color: Colors.white24,
                       ),
                     ),
-                    Text(
-                      '${state.temperatureF.toInt()}°F',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
+                    child: SliderTheme(
+                      data: SliderThemeData(
+                        activeTrackColor: context.colorScheme.inversePrimary,
+                        overlayColor: Colors.transparent,
+                        inactiveTrackColor: context.colorScheme.shadow,
+                        thumbColor: context.colorScheme.inverseSurface,
+                        trackHeight: 20,
+                        padding: EdgeInsets.zero,
+                      ),
+                      child: Slider(
+                        value: state.temperatureF,
+                        min: 190.0,
+                        max: 205.0,
+                        onChanged: state.onTemperatureChanged,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: Insets.small),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(128),
-                    border: Border.all(
-                      color: Colors.white24,
-                    ),
                   ),
-                  child: SliderTheme(
-                    data: SliderThemeData(
-                      activeTrackColor: context.colorScheme.inversePrimary,
-                      overlayColor: Colors.transparent,
-                      inactiveTrackColor: context.colorScheme.shadow,
-                      thumbColor: context.colorScheme.inverseSurface,
-                      trackHeight: 20,
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: Slider(
-                      value: state.temperatureF,
-                      min: 190.0,
-                      max: 205.0,
-                      onChanged: state.onTemperatureChanged,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -203,34 +202,36 @@ class HomeView extends StatelessWidget {
           Positioned(
             top: Insets.xSmall,
             right: Insets.xSmall,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.colorScheme.inversePrimary,
-                shape: CircleBorder(
-                  side: BorderSide(
-                    color: context.colorScheme.onSurface,
+            child: SafeArea(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.colorScheme.inversePrimary,
+                  shape: CircleBorder(
+                    side: BorderSide(
+                      color: context.colorScheme.onSurface,
+                    ),
                   ),
+                  padding: const EdgeInsets.all(Insets.medium),
+                  visualDensity: VisualDensity.compact,
                 ),
-                padding: const EdgeInsets.all(Insets.medium),
-                visualDensity: VisualDensity.compact,
-              ),
-              onPressed: state.onConfirm,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check,
-                    size: 32,
-                    color: context.colorScheme.inverseSurface,
-                  ),
-                  Text(
-                    state.brewRatio.formatted,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: context.colorScheme.inverseSurface,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
+                onPressed: state.onConfirm,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.check,
+                      size: 32,
+                      color: context.colorScheme.inverseSurface,
+                    ),
+                    Text(
+                      state.brewRatio.formatted,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: context.colorScheme.inverseSurface,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
