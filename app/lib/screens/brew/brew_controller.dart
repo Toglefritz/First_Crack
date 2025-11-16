@@ -12,6 +12,7 @@ import 'brew_view.dart';
 /// Extends `State<BrewRoute>` to provide state management capabilities and serves as the bridge between the route and
 /// view components. Manages the brewing process and communicates with the BrewService.
 class BrewController extends State<BrewRoute> {
+  /// The [BrewService] instance used to manage the brewing process.
   late final BrewService _brewService;
 
   @override
@@ -52,6 +53,7 @@ class BrewController extends State<BrewRoute> {
   double get timeRemaining {
     final double targetTime = _brewService.profile.shotTimeSeconds;
     final double elapsed = _brewService.elapsedSeconds;
+
     return (targetTime - elapsed).clamp(0.0, targetTime);
   }
 

@@ -83,7 +83,12 @@ class BrewService extends ChangeNotifier {
 
   /// Simulates the brewing process for the imaginary coffee machine with which this service interacts.
   Future<void> _simulateBrew() async {
-    final double targetTime = _profile.autoStopMode == AutoStopMode.byTime ? _profile.shotTimeSeconds : 30.0;
+    // Duration constants matching cloud simulator
+    const double heatingDuration = 30.0;
+    const double preInfusionDuration = 15.0;
+    const double extractionDuration = 30.0;
+    const double totalDuration = heatingDuration + preInfusionDuration + extractionDuration; // 75 seconds
+
     final double targetYield = _profile.yieldGrams;
 
     while (_isBrewing && _brewStage < BrewStage.complete) {
@@ -91,33 +96,29 @@ class BrewService extends ChangeNotifier {
 
       _elapsedSeconds += 0.1;
 
-      // Update progress based on auto-stop mode
-      if (_profile.autoStopMode == AutoStopMode.byTime) {
-        _brewProgress = (_elapsedSeconds / targetTime).clamp(0.0, 1.0);
-        _currentYieldGrams = targetYield * _brewProgress;
-      } else {
-        // Simulate yield-based progress
-        _currentYieldGrams += targetYield / (targetTime * 10);
-        _brewProgress = (_currentYieldGrams / targetYield).clamp(0.0, 1.0);
-      }
-
-      // Update brew stage based on progress
-      if (_brewProgress < 0.1) {
+      // Update brew stage based on elapsed time
+      if (_elapsedSeconds < heatingDuration) {
         _brewStage = BrewStage.heating;
-      } else if (_brewProgress < 0.2) {
-        _brewStage = BrewStage.grinding;
-      } else if (_brewProgress < 0.3) {
+      } else if (_elapsedSeconds < heatingDuration + preInfusionDuration) {
         _brewStage = BrewStage.preInfusion;
-      } else if (_brewProgress < 1.0) {
+      } else if (_elapsedSeconds < totalDuration) {
         _brewStage = BrewStage.brewing;
+        // Simulate yield during extraction phase
+        final double extractionProgress =
+            (_elapsedSeconds - heatingDuration - preInfusionDuration) / extractionDuration;
+        _currentYieldGrams = targetYield * extractionProgress.clamp(0.0, 1.0);
       } else {
         _brewStage = BrewStage.complete;
+        _currentYieldGrams = targetYield;
       }
+
+      // Overall progress
+      _brewProgress = (_elapsedSeconds / totalDuration).clamp(0.0, 1.0);
 
       notifyListeners();
 
       // Auto-stop when complete
-      if (_brewProgress >= 1.0) {
+      if (_elapsedSeconds >= totalDuration) {
         _brewStage = BrewStage.complete;
         stopBrew();
       }
