@@ -52,8 +52,8 @@ enum BrewStage {
 
   /// Returns identifier for the [BrewStage] displayed in the UI.
   ///
-  /// Note: This is a non-localized identifier. For localized labels,
-  /// use the extension method `localizedLabel(context)` at the UI layer.
+  /// Note: This is a non-localized identifier. For localized labels, use the extension method `localizedLabel(context)`
+  /// at the UI layer.
   String get label {
     return name;
   }
@@ -82,8 +82,8 @@ enum BrewStage {
 extension BrewStageX on BrewStage {
   /// Returns the localized label for this brew stage.
   ///
-  /// This should be used in UI code where BuildContext is available.
-  /// For service/business logic, use the non-localized `label` getter instead.
+  /// This should be used in UI code where BuildContext is available. For service/business logic, use the non-localized
+  /// `label` getter instead.
   String localizedLabel(BuildContext context) {
     switch (this) {
       case BrewStage.heating:

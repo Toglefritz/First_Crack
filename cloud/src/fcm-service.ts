@@ -87,8 +87,10 @@ function buildFCMMessage(
           sound: "default",
           badge: 1,
           "mutable-content": 1, // Enables Notification Service Extension
-          category: stageConfig.actions ? "BREW_ACTIONS" : undefined,
+          category: getCategoryForStage(stageConfig.stage),
         },
+        // Add custom data to APNS payload for Notification Service Extension
+        ...dataPayload,
       },
     },
 
@@ -168,6 +170,29 @@ function buildNotificationData(
   }
 
   return data;
+}
+
+/**
+ * Get the notification category identifier for a brew stage
+ *
+ * Categories determine which action buttons are available for each stage.
+ * These must match the category identifiers defined in the iOS/macOS app.
+ */
+function getCategoryForStage(stage: string): string {
+  switch (stage) {
+    case "heating":
+      return "BREW_HEATING";
+    case "grinding":
+      return "BREW_GRINDING";
+    case "preInfusion":
+      return "BREW_PREINFUSION";
+    case "brewing":
+      return "BREW_EXTRACTION";
+    case "complete":
+      return "BREW_COMPLETE";
+    default:
+      return "BREW_DEFAULT";
+  }
 }
 
 /**

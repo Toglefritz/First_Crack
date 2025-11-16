@@ -9,11 +9,18 @@ class BrewRoute extends StatefulWidget {
   /// Creates the brew route widget.
   const BrewRoute({
     required this.brewingProfile,
+    required this.fcmToken,
     super.key,
   });
 
   /// An object representing the brewing profile which contains information about the brew.
   final BrewingProfile brewingProfile;
+
+  /// The FCM device token for receiving push notifications.
+  ///
+  /// This token is required to start the cloud brew simulation, as it identifies the device that should receive the
+  /// brew stage notifications.
+  final String? fcmToken;
 
   @override
   State<BrewRoute> createState() => BrewController();

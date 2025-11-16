@@ -20,6 +20,7 @@ class BrewController extends State<BrewRoute> {
     super.initState();
     _brewService = BrewService()
       ..addListener(_onBrewUpdate)
+      ..setFcmToken(widget.fcmToken)
       ..updateProfile(widget.brewingProfile);
 
     unawaited(_startBrew());

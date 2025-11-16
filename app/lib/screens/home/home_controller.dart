@@ -114,10 +114,28 @@ class HomeController extends State<HomeRoute> {
       waterTemperatureF: temperatureF,
     );
 
+    // Get the FCM token from the push notification service
+    final String? fcmToken = _pushNotificationService.fcmToken;
+
+    if (fcmToken == null) {
+      debugPrint('Cannot start brew: FCM token not available');
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Push notifications not available. Please check permissions.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (BuildContext context) => BrewRoute(
           brewingProfile: profile,
+          fcmToken: fcmToken,
         ),
       ),
     );

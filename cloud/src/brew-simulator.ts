@@ -11,7 +11,12 @@ import { BREW_STAGES, getTotalBrewDuration } from "./data/brew-stages";
 
 /**
  * Start a brew simulation
- * Schedules all notifications for the brew cycle
+ * Sends all notifications for the brew cycle with appropriate delays
+ *
+ * Note: This function sends notifications sequentially with delays, which means
+ * it will keep the Cloud Function alive for the entire brew duration (~75 seconds).
+ * In a production environment, you would use Cloud Scheduler or Cloud Tasks to
+ * schedule notifications independently.
  */
 export async function startBrewSimulation(
   request: BrewRequest
@@ -39,8 +44,12 @@ export async function startBrewSimulation(
     targetTemp: request.targetTemp,
   });
 
-  // Schedule all notifications
-  scheduleBrewNotifications(brewState);
+  // Send notifications asynchronously (don't wait for completion)
+  // This allows the HTTP response to be sent immediately while notifications
+  // continue to be sent in the background
+  sendBrewNotificationsSequentially(brewState).catch((error) => {
+    console.error("Error sending brew notifications:", error);
+  });
 
   return {
     success: true,
@@ -52,24 +61,51 @@ export async function startBrewSimulation(
 }
 
 /**
- * Schedule all notifications for a brew
- * Uses setTimeout to send notifications at the appropriate times
+ * Send all notifications for a brew sequentially with delays
+ *
+ * This function sends notifications one at a time with the appropriate delays
+ * between them. It uses actual delays (await sleep) rather than setTimeout
+ * to ensure the Cloud Function stays alive for the entire brew duration.
+ *
+ * Note: This approach keeps the Cloud Function running for ~75 seconds, which
+ * is acceptable for a demo but not ideal for production. In production, use
+ * Cloud Scheduler or Cloud Tasks to schedule notifications independently.
  */
-function scheduleBrewNotifications(brewState: BrewState): void {
-  BREW_STAGES.forEach((stageConfig) => {
-    const delayMs = stageConfig.delaySeconds * 1000;
+async function sendBrewNotificationsSequentially(brewState: BrewState): Promise<void> {
+  console.log(`Starting sequential notification delivery for brew ${brewState.brewId}`);
 
-    setTimeout(async () => {
-      try {
-        brewState.currentStage = stageConfig.stage;
-        await sendBrewNotification(brewState, stageConfig);
-      } catch (error) {
-        console.error(`Failed to send notification for stage ${stageConfig.stage}:`, error);
-      }
-    }, delayMs);
-  });
+  let previousDelaySeconds = 0;
 
-  console.log(`Scheduled ${BREW_STAGES.length} notifications for brew ${brewState.brewId}`);
+  for (const stageConfig of BREW_STAGES) {
+    // Calculate delay from previous stage
+    const delayFromPrevious = stageConfig.delaySeconds - previousDelaySeconds;
+
+    if (delayFromPrevious > 0) {
+      console.log(`Waiting ${delayFromPrevious}s before sending ${stageConfig.stage} notification`);
+      await sleep(delayFromPrevious * 1000);
+    }
+
+    try {
+      brewState.currentStage = stageConfig.stage;
+      console.log(`Sending ${stageConfig.stage} notification for brew ${brewState.brewId}`);
+      await sendBrewNotification(brewState, stageConfig);
+      console.log(`Successfully sent ${stageConfig.stage} notification`);
+    } catch (error) {
+      console.error(`Failed to send notification for stage ${stageConfig.stage}:`, error);
+      // Continue with next notification even if one fails
+    }
+
+    previousDelaySeconds = stageConfig.delaySeconds;
+  }
+
+  console.log(`Completed all notifications for brew ${brewState.brewId}`);
+}
+
+/**
+ * Sleep for a specified number of milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**

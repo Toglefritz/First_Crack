@@ -34,7 +34,7 @@ export const startBrew = onRequest(
     cors: true,
     region: "us-central1",
     memory: "256MiB",
-    timeoutSeconds: 120,
+    timeoutSeconds: 540, // 9 minutes - allows for full brew cycle plus buffer
   },
   async (request, response) => {
     // Only accept POST requests
