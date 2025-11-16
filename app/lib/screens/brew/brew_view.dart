@@ -41,8 +41,6 @@ class BrewView extends StatelessWidget {
         ),
         automaticallyImplyLeading: false,
         centerTitle: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: state.brewStage == BrewStage.complete
             ? IconButton(
                 icon: Icon(
@@ -53,8 +51,8 @@ class BrewView extends StatelessWidget {
               )
             : null,
       ),
-      extendBodyBehindAppBar: true,
       body: Stack(
+        alignment: Alignment.topCenter,
         children: [
           // Background gradient
           Positioned.fill(
@@ -70,40 +68,35 @@ class BrewView extends StatelessWidget {
               child: Column(
                 children: [
                   // Brew information row
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: Insets.medium,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _BrewInfoCard(
-                          label: context.l10n.dose,
-                          value: '${state.brewService.profile.doseGrams.toInt()}g',
-                          icon: Icons.coffee,
-                        ),
-                        _BrewInfoCard(
-                          label: context.l10n.ratio,
-                          value: state.brewService.profile.brewRatio.formatted,
-                          icon: Icons.balance,
-                        ),
-                        _BrewInfoCard(
-                          label: context.l10n.yield,
-                          value: '${state.brewService.profile.yieldGrams.toInt()}g',
-                          icon: Icons.local_cafe,
-                        ),
-                        _BrewInfoCard(
-                          label: context.l10n.temperature,
-                          value: '${state.brewService.profile.waterTemperatureF.toInt()}°F',
-                          icon: Icons.thermostat,
-                        ),
-                      ],
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _BrewInfoCard(
+                        label: context.l10n.dose,
+                        value: '${state.brewService.profile.doseGrams.toInt()}g',
+                        icon: Icons.coffee,
+                      ),
+                      _BrewInfoCard(
+                        label: context.l10n.ratio,
+                        value: state.brewService.profile.brewRatio.formatted,
+                        icon: Icons.balance,
+                      ),
+                      _BrewInfoCard(
+                        label: context.l10n.yield,
+                        value: '${state.brewService.profile.yieldGrams.toInt()}g',
+                        icon: Icons.local_cafe,
+                      ),
+                      _BrewInfoCard(
+                        label: context.l10n.temperature,
+                        value: '${state.brewService.profile.waterTemperatureF.toInt()}°F',
+                        icon: Icons.thermostat,
+                      ),
+                    ],
                   ),
 
                   // Brew stage indicator
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: Insets.large),
+                    padding: const EdgeInsets.symmetric(vertical: Insets.medium),
                     child: Text(
                       state.brewStage.label(context),
                       style: Theme.of(context).textTheme.displayMedium?.copyWith(

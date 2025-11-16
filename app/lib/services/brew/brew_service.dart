@@ -55,7 +55,7 @@ class BrewService extends ChangeNotifier {
   /// Starts the brewing process with the current profile.
   ///
   /// Returns true if brew started successfully, false if already brewing.
-  bool startBrew() {
+  Future<bool> startBrew() async {
     if (_isBrewing) return false;
 
     _isBrewing = true;
@@ -67,7 +67,7 @@ class BrewService extends ChangeNotifier {
     notifyListeners();
 
     // Simulates interaction with a coffee machine.
-    _simulateBrew();
+    await _simulateBrew();
 
     return true;
   }

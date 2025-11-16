@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../services/brew/brew_service.dart';
@@ -7,7 +9,7 @@ import 'brew_view.dart';
 
 /// Controller for the [BrewRoute].
 ///
-/// Extends State<BrewRoute> to provide state management capabilities and serves as the bridge between the route and
+/// Extends `State<BrewRoute>` to provide state management capabilities and serves as the bridge between the route and
 /// view components. Manages the brewing process and communicates with the BrewService.
 class BrewController extends State<BrewRoute> {
   late final BrewService _brewService;
@@ -17,18 +19,13 @@ class BrewController extends State<BrewRoute> {
     super.initState();
     _brewService = BrewService()
       ..addListener(_onBrewUpdate)
-      ..updateProfile(widget.brewingProfile)
-      ..startBrew();
+      ..updateProfile(widget.brewingProfile);
+
+    unawaited(_startBrew());
   }
 
-  @override
-  void dispose() {
-    _brewService
-      ..removeListener(_onBrewUpdate)
-      ..dispose();
-
-    super.dispose();
-  }
+  /// Starts the brew.
+  Future<void> _startBrew() async => _brewService.startBrew();
 
   /// Called when the brew service updates its state.
   void _onBrewUpdate() {
@@ -67,4 +64,13 @@ class BrewController extends State<BrewRoute> {
 
   @override
   Widget build(BuildContext context) => BrewView(this);
+
+  @override
+  void dispose() {
+    _brewService
+      ..removeListener(_onBrewUpdate)
+      ..dispose();
+
+    super.dispose();
+  }
 }
