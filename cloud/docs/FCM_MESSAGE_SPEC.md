@@ -105,15 +105,45 @@ headers.
 
 The `stage` field indicates the current brew stage:
 
-| Stage | Description | Typical Actions |
-|-------|-------------|-----------------|
-| `heating` | Machine is heating water | None |
-| `ready` | Ready to brew | Start Brew, Adjust Temp, Cancel |
-| `preinfusion_start` | Pre-infusion beginning | None |
-| `preinfusion_complete` | Pre-infusion done, ramping pressure | None |
-| `extraction_progress` | Active extraction | View Live, Stop Now |
-| `extraction_complete` | Extraction finishing | None |
-| `brew_complete` | Brew finished | View Details, Brew Again, Share |
+| Stage | Description | Category | Typical Actions |
+|-------|-------------|----------|-----------------|
+| `heating` | Machine is heating water | - | None |
+| `ready` | Ready to brew | `BREW_READY` | Start Brew, Adjust Temp, Cancel |
+| `preinfusion_start` | Pre-infusion beginning | - | None |
+| `preinfusion_complete` | Pre-infusion done, ramping pressure | - | None |
+| `extraction_progress` | Active extraction | `BREW_EXTRACTION` | View Live, Stop Now |
+| `extraction_complete` | Extraction finishing | - | None |
+| `brew_complete` | Brew finished | `BREW_COMPLETE` | View Details, Brew Again, Share |
+
+## Notification Categories
+
+Notification categories enable action buttons on iOS/macOS. The `category` field in the APNS payload must match a category configured in the app's AppDelegate.
+
+### Available Categories
+
+| Category | When to Use | Actions |
+|----------|-------------|---------|
+| `BREW_READY` | Machine is heated and ready to start brewing | Start Brew, Adjust Temp, Cancel |
+| `BREW_EXTRACTION` | Coffee is actively extracting | View Live, Stop Now |
+| `BREW_COMPLETE` | Brew has finished successfully | View Details, Brew Again, Share |
+
+### Category Mapping
+
+Use this mapping in your backend to automatically set the correct category:
+
+```typescript
+function getCategoryForStage(stage: string): string | undefined {
+  const categoryMap: Record<string, string> = {
+    'ready': 'BREW_READY',
+    'extraction_progress': 'BREW_EXTRACTION',
+    'brew_complete': 'BREW_COMPLETE'
+  };
+  return categoryMap[stage];
+}
+```
+
+**Note:** Only stages with interactive actions need a category. Other stages (heating, preinfusion, etc.)
+should not include a category field.
 
 ## Actions Structure
 
@@ -201,7 +231,7 @@ apns: {
       sound: "default",
       badge: 1,
       "mutable-content": 1,  // Enables Notification Service Extension
-      category?: string      // e.g., "BREW_ACTIONS"
+      category?: string      // Notification category: "BREW_READY", "BREW_EXTRACTION", or "BREW_COMPLETE"
     }
   }
 }
