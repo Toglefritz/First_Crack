@@ -94,16 +94,15 @@ Notifications adapt their content, media, and available actions based on the cur
 
 ### Stage 1: Heating
 
-**Goal**: Demonstrate dynamic text enrichment and simple progress tracking from the Notification Service Extension, plus live status display in the content extension.
+**Goal**: Demonstrate basic text enrichment and progress tracking from the Notification Service Extension.
 
 #### Collapsed Notification
 
 **Title**: `Heating water for espresso`
 
-**Subtitle**: `Espresso • 18g @ 200°F`
+**Subtitle**: `Espresso • 18g @ 93°C`
 - Dynamically constructed by NSE from brew profile data
-- Format: `{brewType} • {dose}g @ {temperature}°F`
-- Adapts to user's temperature unit preference (°F or °C)
+- Format: `{brewType} • {dose}g @ {temperature}°C`
 
 **Body**: `Your First Crack machine is heating water to the target brewing temperature.`
 - Static descriptive text explaining the current stage
@@ -124,10 +123,9 @@ The NSE performs the following enrichment:
 // Example NSE processing
 let brewType = userInfo["brewType"] as? String ?? "Espresso"
 let dose = userInfo["dose"] as? String ?? "18"
-let temperature = userInfo["temperature"] as? String ?? "200"
-let tempUnit = userInfo["temperatureUnit"] as? String ?? "F"
+let temperature = userInfo["temperature"] as? String ?? "93"
 
-bestAttemptContent.subtitle = "\(brewType) • \(dose)g @ \(temperature)°\(tempUnit)"
+bestAttemptContent.subtitle = "\(brewType) • \(dose)g @ \(temperature)°C"
 
 if let remainingTime = userInfo["remainingTime"] as? String {
     bestAttemptContent.body += "\nAbout \(remainingTime) seconds remaining."
@@ -138,46 +136,41 @@ if let remainingTime = userInfo["remainingTime"] as? String {
 
 When the user expands the notification, the content extension displays:
 
-**Temperature Progress Bar**
-- Horizontal progress indicator showing current vs target temperature
-- Visual representation: `[=========>     ]`
-- Color gradient from blue (cold) to red (hot)
-
-**Large Temperature Readout**
-- Current temperature: `185°F` (large, prominent display)
-- Target temperature: `200°F` (smaller, secondary display)
-- Progress percentage: `92%`
+**Progress Indicator**
+- General progress bar showing heating stage completion
+- Visual representation based on elapsed time vs expected duration
+- Simple percentage display
 
 **Brew Profile Summary**
 - Brew type: Espresso
 - Dose: 18g
-- Target ratio: 1:2.0
-- Target yield: 36g
+- Target temperature: 93°C
+- Target pressure: 9 bar
 
 **Actions**
-- Single action button: `Cancel Brew` or `Postpone`
+- Single action button: `Cancel Brew`
 - Tapping opens app or triggers cancellation flow
 
 #### Technical Focus
 
 - **NSE**: Text enrichment using `userInfo` data
-- **Content Extension**: Custom UI with progress visualization
+- **Content Extension**: Simple progress visualization
 - **Demonstration**: Informative but not heavily interactive
-- **User Value**: Clear status and progress without opening app
+- **User Value**: Clear status without opening app
 
 ---
 
 ### Stage 2: Grinding
 
-**Goal**: Demonstrate media attachments and stage-specific actions via notification categories, plus a more visual expanded view.
+**Goal**: Demonstrate media attachments and stage-specific actions via notification categories.
 
 #### Collapsed Notification
 
 **Title**: `Grinding beans for your shot`
 
-**Subtitle**: `Ethiopia Yirgacheffe • Medium-fine`
-- Dynamically constructed from `beanName` and `grindSetting`
-- Format: `{beanName} • {grindSetting}`
+**Subtitle**: `Espresso • 18g dose`
+- Dynamically constructed from brew profile data
+- Format: `{brewType} • {dose}g dose`
 
 **Body**: `Fresh beans are being ground to the selected profile.`
 
@@ -188,8 +181,8 @@ When the user expands the notification, the content extension displays:
 
 #### Notification Service Extension Processing
 
-1. **Parse Bean Information**: Extract `beanName`, `grindSetting` from `userInfo`
-2. **Build Subtitle**: Construct formatted string with bean details
+1. **Parse Brew Profile**: Extract `brewType`, `dose` from `userInfo`
+2. **Build Subtitle**: Construct formatted string with brew parameters
 3. **Download Media**: Fetch image from `imageUrl` and create attachment
 4. **Set Category**: Assign `BREW_GRINDING` category for stage-specific actions
 
@@ -212,29 +205,29 @@ bestAttemptContent.categoryIdentifier = "BREW_GRINDING"
 #### Expanded Content (Content Extension)
 
 **Media Display**
-- Larger image or short looping video of grinding process
-- Optional: Animated GIF showing beans being ground
-- Fallback to static image if video unavailable
+- Larger image of grinding process
+- Fallback to static image if unavailable
 
 **Status Label**
-- `Grinding: 70% complete`
-- Progress indicator (circular or linear)
+- `Grinding in progress`
+- Progress indicator based on elapsed time
 - Estimated time remaining
 
 **Brew Parameters**
-- Bean origin: Ethiopia Yirgacheffe
-- Grind setting: Medium-fine (7/10)
+- Brew type: Espresso
 - Dose: 18g
+- Target temperature: 93°C
+- Target pressure: 9 bar
 
 **Actions**
 - `Pause Grinding` - Temporarily stops the grinder
-- `Adjust Grind Size` - Opens app to grind settings or triggers adjustment flow
+- `Adjust Settings` - Opens app to brew settings
 
 #### Technical Focus
 
 - **NSE**: Media download and attachment creation
 - **Categories**: Stage-specific action buttons
-- **Content Extension**: Larger media display with progress UI
+- **Content Extension**: Media display with progress UI
 - **Demonstration**: Rich media integration and contextual actions
 
 ---
@@ -313,19 +306,19 @@ if !elapsedTime.isEmpty && !preInfusionTime.isEmpty {
 
 ### Stage 4: Brewing (Extraction)
 
-**Goal**: This is the "hero" notification demonstrating rich media, dynamic stats, and multiple controls in a single expanded view.
+**Goal**: This is the "hero" notification demonstrating rich media, live stats, and multiple controls in a single expanded view.
 
 #### Collapsed Notification
 
 **Title**: `Extraction in progress`
 
-**Subtitle**: `1:1.7 ratio • 19s elapsed`
-- Dynamically computed from `dose`, `yield`, `elapsedTime`
-- Format: `1:{currentRatio} ratio • {elapsed}s elapsed`
-- Updates in real-time as extraction progresses
+**Subtitle**: `Espresso • 19s elapsed`
+- Dynamically constructed from brew profile and timing data
+- Format: `{brewType} • {elapsed}s elapsed`
+- Updates as extraction progresses
 
 **Body**: `Your espresso shot is pulling. Tap to view live stats.`
-- Optional enhancement: `15 ml extracted • 1.2 ml/s.`
+- Optional enhancement: `Flow rate: 1.2 ml/s` (if available)
 
 **Media**: Still image from naked portafilter perspective
 - Shows espresso extraction in progress
@@ -334,26 +327,22 @@ if !elapsedTime.isEmpty && !preInfusionTime.isEmpty {
 
 #### Notification Service Extension Processing
 
-1. **Parse Extraction Parameters**: Extract `dose`, `yield`, `elapsedTime`, `targetRatio`, `flowRate`, `volumeExtracted`
-2. **Compute Current Ratio**: Calculate `yield / dose` for subtitle
-3. **Build Subtitle**: Format with current ratio and elapsed time
-4. **Download Media**: Fetch extraction image from `imageUrl`
-5. **Enhance Body**: Add flow rate and volume if available
-6. **Set Category**: Assign `BREW_EXTRACTION` category
+1. **Parse Extraction Parameters**: Extract `brewType`, `dose`, `elapsedTime`, `pressure`, `temperature`
+2. **Build Subtitle**: Format with brew type and elapsed time
+3. **Download Media**: Fetch extraction image from `imageUrl`
+4. **Enhance Body**: Add flow rate if available
+5. **Set Category**: Assign `BREW_EXTRACTION` category
 
 ```swift
 // Example NSE processing
-let dose = Double(userInfo["dose"] as? String ?? "18") ?? 18.0
-let yield = Double(userInfo["yield"] as? String ?? "0") ?? 0.0
+let brewType = userInfo["brewType"] as? String ?? "Espresso"
 let elapsedTime = userInfo["elapsedTime"] as? String ?? "0"
 let flowRate = userInfo["flowRate"] as? String
-let volumeExtracted = userInfo["volumeExtracted"] as? String
 
-let currentRatio = yield / dose
-bestAttemptContent.subtitle = "1:\(String(format: "%.1f", currentRatio)) ratio • \(elapsedTime)s elapsed"
+bestAttemptContent.subtitle = "\(brewType) • \(elapsedTime)s elapsed"
 
-if let flow = flowRate, let volume = volumeExtracted {
-    bestAttemptContent.body += "\n\(volume) ml extracted • \(flow) ml/s."
+if let flow = flowRate {
+    bestAttemptContent.body += "\nFlow rate: \(flow) ml/s"
 }
 ```
 
@@ -365,34 +354,29 @@ if let flow = flowRate, let volume = volumeExtracted {
 - Updates periodically if multiple images available
 
 **Key Stats Grid**
-- **Ratio**: `1:1.7` (current yield ratio)
 - **Elapsed**: `19s` (time since extraction started)
 - **Pressure**: `9.0 bar` (current extraction pressure)
-- **Flow**: `1.2 ml/s` (current flow rate)
-- **Volume**: `15 ml` (total extracted volume)
-- **Target**: `36 ml` (target yield)
+- **Temperature**: `93°C` (water temperature)
+- **Dose**: `18g` (coffee dose)
+- **Flow**: `1.2 ml/s` (current flow rate, if available)
+- **Volume**: `15 ml` (total extracted volume, if available)
 
 **Timeline/Progress Bar**
 - Visual indicator showing current position in expected shot time
 - Typical range: 25-35 seconds
-- Color-coded zones: under-extracted (yellow), optimal (green), over-extracted (red)
-
-**Temperature Display**
-- Current water temperature: `200°F`
-- Stability indicator (±1°F variance)
+- Simple progress visualization
 
 **Interactions**
 - `Stop Shot Now` - Immediately ends extraction
-- `Extend to 1:2.5` - Updates target yield to achieve 1:2.5 ratio
-- Optional: Slider for adjusting target ratio (macOS notifications)
+- `View Live` - Opens app to live extraction view
 
 #### Technical Focus
 
-- **NSE**: Complex data parsing and dynamic subtitle computation
-- **Content Extension**: Full brew dashboard with multiple live parameters
+- **NSE**: Data parsing and media attachment
+- **Content Extension**: Brew dashboard with live parameters
 - **Media**: Rich visual content showing extraction process
-- **Actions**: Multiple meaningful controls for adjusting brew parameters
-- **Demonstration**: Notifications as a complete control panel, not just an alert
+- **Actions**: Meaningful controls for brew management
+- **Demonstration**: Notifications as a control panel, not just an alert
 
 ---
 
@@ -404,11 +388,11 @@ if let flow = flowRate, let volume = volumeExtracted {
 
 **Title**: `Espresso shot complete`
 
-**Subtitle**: `36g in 28s • 1:2 ratio`
+**Subtitle**: `Completed in 28s`
 - Final brew statistics
-- Format: `{yield}g in {time}s • 1:{ratio} ratio`
+- Format: `Completed in {time}s`
 
-**Body**: `Your espresso is ready.`
+**Body**: `Your espresso is ready. Enjoy!`
 
 **Media**: Final cup image showing finished espresso with crema
 - Downloaded from `imageUrl` by NSE
@@ -416,20 +400,18 @@ if let flow = flowRate, let volume = volumeExtracted {
 
 #### Notification Service Extension Processing
 
-1. **Parse Final Statistics**: Extract `volumeExtracted`, `elapsedTime`, `brewRatio`
-2. **Build Subtitle**: Format with final yield, time, and ratio
+1. **Parse Final Statistics**: Extract `elapsedTime` from `userInfo`
+2. **Build Subtitle**: Format with final time
 3. **Download Media**: Fetch final cup image from `imageUrl`
 4. **Enhance Body**: Add short summary line
 5. **Set Category**: Assign `BREW_COMPLETE` category
 
 ```swift
 // Example NSE processing
-let volumeExtracted = userInfo["volumeExtracted"] as? String ?? "36"
 let elapsedTime = userInfo["elapsedTime"] as? String ?? "28"
-let brewRatio = userInfo["brewRatio"] as? String ?? "2.0"
 
-bestAttemptContent.subtitle = "\(volumeExtracted)g in \(elapsedTime)s • 1:\(brewRatio) ratio"
-bestAttemptContent.body = "Your espresso is ready.\n\(volumeExtracted) ml extracted in \(elapsedTime) seconds."
+bestAttemptContent.subtitle = "Completed in \(elapsedTime)s"
+bestAttemptContent.body = "Your espresso is ready. Enjoy!"
 ```
 
 #### Expanded Content (Content Extension)
@@ -440,35 +422,26 @@ bestAttemptContent.body = "Your espresso is ready.\n\(volumeExtracted) ml extrac
 - "Instagram-worthy" shot composition
 
 **Summary Card**
+- **Brew Type**: `Espresso`
 - **Dose**: `18g`
-- **Yield**: `36g`
 - **Time**: `28s`
-- **Ratio**: `1:2.0`
-- **Temperature**: `200°F`
+- **Temperature**: `93°C`
 - **Pressure**: `9.0 bar`
-- **Bean**: `Ethiopia Yirgacheffe`
-- **Grind**: `Medium-fine`
 
 **Brew Notes**
-- Tasting notes or quality assessment
-- Example: "Balanced body, medium acidity. Try a longer ratio for a brighter cup."
-- Could be AI-generated based on brew parameters
-- Provides educational feedback and suggestions
-
-**Quality Indicators**
-- Extraction quality: `Excellent` (based on time and ratio)
-- Crema quality: `Good` (if image analysis available)
-- Consistency score: `95%` (compared to previous brews)
+- Simple completion message
+- Example: "Perfect extraction completed. Your espresso is ready to enjoy."
+- Encourages user to try the brew
 
 **Actions**
-- `Brew Again with Same Profile` - Starts new brew with identical parameters
+- `Brew Again` - Starts new brew with same parameters
 - `Adjust Profile` - Deep links to brew profile editor in app
 - `Share` - Opens share sheet with brew stats and image
 
 #### Technical Focus
 
 - **NSE**: Final statistics enhancement and media attachment
-- **Content Extension**: Summary-style UI focused on reflection and next actions
+- **Content Extension**: Summary-style UI focused on completion and next actions
 - **Actions**: Workflow completion actions (repeat, adjust, share)
 - **Demonstration**: Notifications help close the loop on a workflow, not just signal its end
 
@@ -499,15 +472,15 @@ Each brew stage maps to a specific notification category that defines available 
 #### BREW_EXTRACTION
 - **Actions**:
   - `stop_shot` - Stop Shot Now
-  - `extend_ratio` - Extend to 1:2.5
-- **Rationale**: User can stop early or extend extraction
+  - `view_live` - View Live
+- **Rationale**: User can stop early or view live extraction details
 
 #### BREW_COMPLETE
 - **Actions**:
   - `brew_again` - Brew Again
   - `adjust_profile` - Adjust Profile
   - `share` - Share
-- **Rationale**: User can repeat, modify, or share the brew
+- **Rationale**: User can repeat, modify, or share the completed brew
 
 ### Action Handling
 
@@ -555,16 +528,11 @@ Additional fields vary by brew stage:
   "brewType": "espresso",
   "dose": "18",
   "temperature": "93",
-  "temperatureUnit": "C",
   "pressure": "9",
   "elapsedTime": "19",
   "remainingTime": "9",
   "flowRate": "1.2",
-  "volumeExtracted": "15",
-  "targetYield": "36",
-  "brewRatio": "2.0",
-  "beanName": "Ethiopia Yirgacheffe",
-  "grindSetting": "Medium-fine"
+  "volumeExtracted": "15"
 }
 ```
 
@@ -630,7 +598,7 @@ Additional fields vary by brew stage:
 3. **Grinding Stage** (30-45s)
    - Notification: "Grinding beans for your shot"
    - Shows grinding progress with image
-   - User can pause or adjust grind
+   - User can pause or adjust settings
 
 4. **Pre-Infusion Stage** (45-53s)
    - Notification: "Pre-infusion in progress"
@@ -640,7 +608,7 @@ Additional fields vary by brew stage:
 5. **Extraction Stage** (53-81s)
    - Notification: "Extraction in progress"
    - Shows live stats and extraction image
-   - User can stop early or extend ratio
+   - User can stop early or view live
 
 6. **Complete Stage** (81s+)
    - Notification: "Espresso shot complete"
