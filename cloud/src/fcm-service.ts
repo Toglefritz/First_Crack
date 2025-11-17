@@ -53,6 +53,10 @@ function buildFCMMessage(
     }
   });
 
+  // Get the category for this stage
+  const category = getCategoryForStage(stageConfig.stage);
+  console.log(`Building notification for stage: ${stageConfig.stage}, category: ${category}`);
+
   const message: FCMMessage = {
     token: brewState.deviceToken,
     data: dataPayload,
@@ -87,7 +91,7 @@ function buildFCMMessage(
           sound: "default",
           badge: 1,
           "mutable-content": 1, // Enables Notification Service Extension
-          category: getCategoryForStage(stageConfig.stage),
+          category: category,
         },
         // Add custom data to APNS payload for Notification Service Extension
         ...dataPayload,
@@ -173,10 +177,20 @@ function buildNotificationData(
 }
 
 /**
- * Get the notification category identifier for a brew stage
+ * Get the notification category identifier for a brew stage.
  *
  * Categories determine which action buttons are available for each stage.
- * These must match the category identifiers defined in the iOS/macOS app.
+ * These must match the category identifiers defined in the iOS/macOS AppDelegate.
+ *
+ * Stage to Category Mapping:
+ * * heating → BREW_HEATING (no actions)
+ * * grinding → BREW_GRINDING (pause, adjust actions)
+ * * preInfusion → BREW_PREINFUSION (skip, extend actions)
+ * * brewing → BREW_EXTRACTION (stop, view live actions)
+ * * complete → BREW_COMPLETE (brew again, adjust, share actions)
+ *
+ * @param stage - The brew stage identifier from BrewStage type
+ * @returns The iOS/macOS notification category identifier
  */
 function getCategoryForStage(stage: string): string {
   switch (stage) {
@@ -191,7 +205,8 @@ function getCategoryForStage(stage: string): string {
     case "complete":
       return "BREW_COMPLETE";
     default:
-      return "BREW_DEFAULT";
+      console.warn(`Unknown brew stage: ${stage}, using default category`);
+      return "BREW_HEATING"; // Default to heating (no actions) for unknown stages
   }
 }
 

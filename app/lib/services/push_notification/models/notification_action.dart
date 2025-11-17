@@ -1,85 +1,123 @@
 part of '../push_notification_service.dart';
 
-/// Model representing an interactive action button on a notification.
+/// Enumeration of available notification actions for brew notifications.
 ///
-/// Actions allow users to interact with notifications without opening the app. Examples include "Start Brew", "Cancel",
-/// "View Details", etc.
+/// This enum defines all possible action button types that can appear on brew notifications. Each action corresponds to
+/// a specific user interaction with the brew process.
 ///
-/// Each action has an identifier, display text, and optional configuration for icons, foreground requirements, and deep
-/// linking.
-class NotificationAction {
-  /// Unique identifier for this action.
+/// Action identifiers are used to map between native iOS/macOS action buttons and Flutter navigation logic. The
+/// identifiers must match those defined in the AppDelegate.
+enum NotificationAction {
+  /// Pause the grinding operation.
   ///
-  /// Used to identify which action was tapped when handling user interactions. Examples: "start_brew", "cancel",
-  /// "view_details"
-  final String id;
+  /// Available during: BREW_GRINDING stage Deep link: firstcrack://brew/{brewId}/pause
+  pauseGrinding,
 
-  /// Display text shown on the action button.
+  /// Open grind settings screen.
   ///
-  /// This is the user-visible label for the action. Examples: "Start Brew", "Cancel", "View Details"
-  final String title;
+  /// Available during: BREW_GRINDING stage Deep link: firstcrack://brew/{brewId}/settings
+  adjustGrind,
 
-  /// Optional icon name for the action button.
+  /// Skip pre-infusion and start extraction immediately.
   ///
-  /// The icon name is platform-specific and must be mapped to actual icon resources in the native code. Examples:
-  /// "play", "stop", "info"
-  final String? icon;
+  /// Available during: BREW_PREINFUSION stage Deep link: firstcrack://brew/{brewId}/skip-preinfusion
+  skipPreinfusion,
 
-  /// Whether this action requires the app to be in the foreground.
+  /// Add additional pre-infusion time.
   ///
-  /// If true, tapping this action will open the app before executing. If false, the action can be handled in the
-  /// background without opening the app (platform support varies).
-  final bool requiresForeground;
+  /// Available during: BREW_PREINFUSION stage Deep link: firstcrack://brew/{brewId}/extend-preinfusion
+  extendPreinfusion,
 
-  /// Optional deep link URL to navigate to when the action is tapped.
+  /// Stop extraction immediately.
   ///
-  /// Format: firstcrack://path/to/screen Example: firstcrack://brew/start
-  final String? deepLink;
+  /// Available during: BREW_EXTRACTION stage Deep link: firstcrack://brew/{brewId}/stop
+  stopShot,
 
-  /// Additional data to pass with the action.
+  /// View live extraction progress.
   ///
-  /// This map can contain any custom data needed to handle the action. The data is preserved when the action is tapped
-  /// and can be used for context-specific handling.
-  final Map<String, String> data;
+  /// Available during: BREW_EXTRACTION stage Deep link: firstcrack://brew/{brewId}/live
+  viewLive,
 
-  /// Creates a notification action.
-  const NotificationAction({
-    required this.id,
-    required this.title,
-    this.icon,
-    this.requiresForeground = false,
-    this.deepLink,
-    this.data = const <String, String>{},
-  });
-
-  /// Creates a NotificationAction from a map.
+  /// Repeat the same brew with identical settings.
   ///
-  /// Used when parsing actions from the FCM message data payload. The actions are sent as a JSON-encoded array in the
-  /// message.
-  factory NotificationAction.fromMap(Map<String, dynamic> map) {
-    return NotificationAction(
-      id: map['id'] as String? ?? '',
-      title: map['title'] as String? ?? '',
-      icon: map['icon'] as String?,
-      requiresForeground: map['requiresForeground'] as bool? ?? false,
-      deepLink: map['deepLink'] as String?,
-      data: Map<String, String>.from(
-        (map['data'] as Map<String, dynamic>?) ?? <String, String>{},
-      ),
-    );
+  /// Available during: BREW_COMPLETE stage Deep link: firstcrack://brew/{brewId}/repeat
+  brewAgain,
+
+  /// Edit the brew profile parameters.
+  ///
+  /// Available during: BREW_COMPLETE stage Deep link: firstcrack://brew/{brewId}/profile
+  adjustProfile,
+
+  /// Share brew results with others.
+  ///
+  /// Available during: BREW_COMPLETE stage Deep link: firstcrack://brew/{brewId}/share
+  share,
+
+  /// Default action for notification body tap.
+  ///
+  /// Available during: All stages Deep link: firstcrack://brew/{brewId}/details
+  defaultAction;
+
+  /// Creates a NotificationAction from an action identifier string.
+  ///
+  /// This factory method maps action identifier strings from native code to the corresponding enum value. The
+  /// identifiers must match those defined in the AppDelegate's notification category registration.
+  ///
+  /// Throws [ArgumentError] if the identifier is not recognized.
+  static NotificationAction fromIdentifier(String identifier) {
+    switch (identifier) {
+      case 'pause_grinding':
+        return NotificationAction.pauseGrinding;
+      case 'adjust_grind':
+        return NotificationAction.adjustGrind;
+      case 'skip_preinfusion':
+        return NotificationAction.skipPreinfusion;
+      case 'extend_preinfusion':
+        return NotificationAction.extendPreinfusion;
+      case 'stop_shot':
+        return NotificationAction.stopShot;
+      case 'view_live':
+        return NotificationAction.viewLive;
+      case 'brew_again':
+        return NotificationAction.brewAgain;
+      case 'adjust_profile':
+        return NotificationAction.adjustProfile;
+      case 'share':
+        return NotificationAction.share;
+      case 'com.apple.UNNotificationDefaultActionIdentifier':
+      case 'default':
+        return NotificationAction.defaultAction;
+      default:
+        throw ArgumentError('Unknown action identifier: $identifier');
+    }
   }
 
-  /// Converts this action to a map.
+  /// Converts this action to an action identifier string.
   ///
-  /// Used when serializing notification data for storage in local notification payloads.
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'id': id,
-      'title': title,
-      'icon': icon,
-      'requiresForeground': requiresForeground,
-      'deepLink': deepLink,
-      'data': data,
-    };
+  /// This method converts the enum value back to the action identifier string used in native code. This is useful for
+  /// serialization and logging.
+  String toIdentifier() {
+    switch (this) {
+      case NotificationAction.pauseGrinding:
+        return 'pause_grinding';
+      case NotificationAction.adjustGrind:
+        return 'adjust_grind';
+      case NotificationAction.skipPreinfusion:
+        return 'skip_preinfusion';
+      case NotificationAction.extendPreinfusion:
+        return 'extend_preinfusion';
+      case NotificationAction.stopShot:
+        return 'stop_shot';
+      case NotificationAction.viewLive:
+        return 'view_live';
+      case NotificationAction.brewAgain:
+        return 'brew_again';
+      case NotificationAction.adjustProfile:
+        return 'adjust_profile';
+      case NotificationAction.share:
+        return 'share';
+      case NotificationAction.defaultAction:
+        return 'default';
+    }
   }
 }

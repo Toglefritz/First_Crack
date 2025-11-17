@@ -35,12 +35,6 @@ class NotificationData {
   /// Recommended size: < 5MB.
   final String? videoUrl;
 
-  /// List of interactive action buttons for the notification.
-  ///
-  /// These actions allow users to interact with the notification without opening the app. Examples: "Start Brew",
-  /// "Cancel", "View Details".
-  final List<NotificationAction> actions;
-
   /// Deep link URL for navigation when the notification is tapped.
   ///
   /// Format: firstcrack://path/to/screen Example: firstcrack://brew/status
@@ -89,7 +83,6 @@ class NotificationData {
     required this.elapsedTime,
     this.imageUrl,
     this.videoUrl,
-    this.actions = const <NotificationAction>[],
     this.deepLink,
     this.progress,
     this.remainingTime,
@@ -112,22 +105,6 @@ class NotificationData {
       map['stage'] as String? ?? 'heating',
     );
 
-    // Parse actions from JSON string
-    final List<NotificationAction> actions = <NotificationAction>[];
-    final String? actionsJson = map['actions'] as String?;
-    if (actionsJson != null && actionsJson.isNotEmpty) {
-      try {
-        final List<dynamic> actionsList = jsonDecode(actionsJson) as List<dynamic>;
-        for (final dynamic actionMap in actionsList) {
-          actions.add(
-            NotificationAction.fromMap(actionMap as Map<String, dynamic>),
-          );
-        }
-      } catch (error) {
-        // Ignore parsing errors for actions
-      }
-    }
-
     return NotificationData(
       type: type,
       stage: stage,
@@ -136,7 +113,6 @@ class NotificationData {
       body: map['body'] as String? ?? '',
       imageUrl: map['imageUrl'] as String?,
       videoUrl: map['videoUrl'] as String?,
-      actions: actions,
       deepLink: map['deepLink'] as String?,
       progress: _parseInt(map['progress'] as String?),
       brewType: map['brewType'] as String? ?? 'espresso',
@@ -163,7 +139,6 @@ class NotificationData {
       'body': body,
       'imageUrl': imageUrl,
       'videoUrl': videoUrl,
-      'actions': actions.map((NotificationAction a) => a.toMap()).toList(),
       'deepLink': deepLink,
       'progress': progress,
       'brewType': brewType,

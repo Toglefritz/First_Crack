@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../brew/models/brew_stage.dart';
@@ -44,6 +45,17 @@ part 'models/notification_type.dart';
 /// * Android: Uses FirebaseMessagingService for custom notification rendering
 /// * Web: Uses Service Worker for push notification handling
 class PushNotificationService extends ChangeNotifier {
+  /// Method channel for receiving notification actions from native code.
+  ///
+  /// This channel is used to receive notification action button taps from iOS/macOS native code. When a user taps an
+  /// action button, the native code sends the action data through this channel to the Flutter app.
+  ///
+  /// Channel name: "com.toglefritz.firstcrack/notifications" Methods:
+  /// * onNotificationAction - Receives action data when user taps notification
+  static const MethodChannel _notificationChannel = MethodChannel(
+    'com.toglefritz.firstcrack/notifications',
+  );
+
   /// Firebase Messaging instance for FCM operations.
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
@@ -129,6 +141,9 @@ class PushNotificationService extends ChangeNotifier {
 
       // Set up message handlers
       await _setupMessageHandlers();
+
+      // Set up method channel handler for notification actions
+      await _setupMethodChannel();
 
       // Get initial token
       await _retrieveToken();
@@ -217,6 +232,88 @@ class PushNotificationService extends ChangeNotifier {
 
     // Check for initial message (app opened from terminated state)
     await _checkInitialMessage();
+  }
+
+  /// Sets up the method channel handler for notification actions.
+  ///
+  /// This method registers a handler for the method channel that receives notification action data from native
+  /// iOS/macOS code. When a user taps an action button on a notification, the native code sends the action data through
+  /// this channel.
+  ///
+  /// The handler parses the action data and emits it to the actionTaps stream, allowing the app to respond to
+  /// notification actions with navigation and business logic.
+  ///
+  /// Error Handling:
+  /// * If method channel setup fails, logs error and continues
+  /// * If method call parsing fails, logs error and continues
+  /// * Invalid action data is logged but does not crash the app
+  Future<void> _setupMethodChannel() async {
+    try {
+      // Register method call handler for the notifications channel
+      _notificationChannel.setMethodCallHandler(_handleMethodCall);
+
+      debugPrint('PushNotificationService: Method channel handler registered');
+      debugPrint('PushNotificationService: Listening for notification actions');
+    } catch (error) {
+      debugPrint('PushNotificationService: Failed to set up method channel - $error');
+    }
+  }
+
+  /// Handles method calls from native code via the method channel.
+  ///
+  /// This handler receives method calls from iOS/macOS native code and routes them to the appropriate handler method.
+  /// Currently supports:
+  ///
+  /// * onNotificationAction - Handles notification action button taps
+  ///
+  /// Unknown method calls are logged but do not cause errors, allowing for graceful handling of unexpected method
+  /// calls.
+  ///
+  /// - Parameter call: The method call from native code
+  /// - Returns: Future that completes when the method is handled
+  Future<void> _handleMethodCall(MethodCall call) async {
+    debugPrint('PushNotificationService: Received method call: ${call.method}');
+
+    switch (call.method) {
+      case 'onNotificationAction':
+        await _handleNotificationAction(call.arguments as Map<dynamic, dynamic>);
+      default:
+        debugPrint('PushNotificationService: Unknown method: ${call.method}');
+    }
+  }
+
+  /// Handles notification action data received from native code.
+  ///
+  /// This method parses the action data map received from iOS/macOS native code, creates a NotificationActionTap
+  /// object, and emits it to the actionTaps stream.
+  ///
+  /// The action data includes:
+  /// * action - The action identifier (e.g., "pause_grinding")
+  /// * brewId - The brew ID from the notification
+  /// * deepLink - The generated deep link URL for navigation
+  ///
+  /// Error Handling:
+  /// * If parsing fails, logs error and continues without crashing
+  /// * If required fields are missing, logs error and continues
+  /// * Invalid action identifiers are caught and logged
+  Future<void> _handleNotificationAction(Map<dynamic, dynamic> arguments) async {
+    try {
+      debugPrint('PushNotificationService: Handling notification action');
+      debugPrint('PushNotificationService: Arguments: $arguments');
+
+      // Parse action tap data from map
+      final NotificationActionTap actionTap = NotificationActionTap.fromMap(arguments);
+
+      debugPrint('PushNotificationService: Parsed action tap: $actionTap');
+
+      // Emit action tap to stream for app to handle
+      _actionTapController.add(actionTap);
+
+      debugPrint('PushNotificationService: Action tap emitted to stream');
+    } catch (error) {
+      debugPrint('PushNotificationService: Failed to handle notification action - $error');
+      debugPrint('PushNotificationService: Arguments were: $arguments');
+    }
   }
 
   // MARK: Token Management

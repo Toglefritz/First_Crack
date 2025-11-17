@@ -184,18 +184,35 @@ class NotificationViewController: UIViewController, UNNotificationContentExtensi
     /// and updates all UI components to reflect the current brew state.
     ///
     /// The method handles all brew stages and adapts the UI accordingly:
+    /// - Parses brew stage from notification userInfo
+    /// - Routes to appropriate UI update method based on stage
     /// - Shows/hides media based on attachment availability
     /// - Populates parameter grid with stage-specific statistics
     /// - Updates progress indicators with current completion percentage
     /// - Applies stage-specific styling and colors
+    /// - Handles missing or invalid stage data gracefully
+    ///
+    /// **Error Handling:**
+    /// - Missing stage data defaults to empty string (triggers default UI)
+    /// - Invalid stage identifiers are handled by default case
+    /// - Missing parameters use sensible defaults
+    /// - Media loading failures are caught and logged
     ///
     /// - Parameter notification: The notification containing brew data and media
     func didReceive(_ notification: UNNotification) {
         let content: UNNotificationContent = notification.request.content
         let userInfo: [AnyHashable: Any] = content.userInfo
         
-        // Extract brew stage and parameters
+        // Parse brew stage from notification userInfo
+        // If stage is missing or invalid, default to empty string which triggers default UI
         let stage: String = userInfo["stage"] as? String ?? ""
+        
+        // Validate stage data - log warning if stage is missing
+        if stage.isEmpty {
+            NSLog("Warning: Notification received without stage identifier. Using default UI.")
+        }
+        
+        // Extract brew parameters with sensible defaults
         let brewType: String = userInfo["brewType"] as? String ?? "Espresso"
         let dose: String = userInfo["dose"] as? String ?? "18"
         let temperature: String = userInfo["temperature"] as? String ?? "93"
@@ -207,13 +224,22 @@ class NotificationViewController: UIViewController, UNNotificationContentExtensi
         subtitleLabel.text = content.subtitle
         
         // Display media if attached
+        // Handle media loading errors gracefully to prevent extension crashes
         if let attachment: UNNotificationAttachment = content.attachments.first,
            attachment.url.startAccessingSecurityScopedResource() {
             
-            if let imageData: Data = try? Data(contentsOf: attachment.url),
-               let image: UIImage = UIImage(data: imageData) {
-                mediaImageView.image = image
-                mediaImageView.isHidden = false
+            do {
+                let imageData: Data = try Data(contentsOf: attachment.url)
+                if let image: UIImage = UIImage(data: imageData) {
+                    mediaImageView.image = image
+                    mediaImageView.isHidden = false
+                } else {
+                    NSLog("Warning: Failed to create UIImage from attachment data")
+                    mediaImageView.isHidden = true
+                }
+            } catch {
+                NSLog("Error loading notification attachment: \(error.localizedDescription)")
+                mediaImageView.isHidden = true
             }
             
             attachment.url.stopAccessingSecurityScopedResource()
@@ -221,7 +247,8 @@ class NotificationViewController: UIViewController, UNNotificationContentExtensi
             mediaImageView.isHidden = true
         }
         
-        // Update UI based on brew stage
+        // Route to appropriate UI update method based on stage
+        // The updateUIForStage method handles invalid stages with a default case
         updateUIForStage(
             stage: stage,
             brewType: brewType,
@@ -238,13 +265,10 @@ class NotificationViewController: UIViewController, UNNotificationContentExtensi
     
     /// Updates UI components based on the current brew stage
     ///
-    /// Each stage displays different parameters and visualizations:
-    ///
-    /// **Heating**: Temperature progress and time remaining
-    /// **Grinding**: Dose information and grind progress
-    /// **Pre-Infusion**: Pressure, timing, and puck saturation visualization
-    /// **Brewing**: Full extraction dashboard with multiple live parameters
-    /// **Complete**: Final statistics summary with completion message
+    /// Routes to the appropriate stage-specific UI update method based on the
+    /// brew stage identifier. This method acts as a dispatcher, delegating to
+    /// specialized methods that handle the unique visualization requirements
+    /// for each brew stage.
     ///
     /// - Parameters:
     ///   - stage: Current brew stage identifier
@@ -265,77 +289,65 @@ class NotificationViewController: UIViewController, UNNotificationContentExtensi
         progress: Double,
         userInfo: [AnyHashable: Any]
     ) {
-        // Clear existing parameters
+        // Clear existing parameters before updating
         parametersGrid.arrangedSubviews.forEach { $0.removeFromSuperview() }
         
+        // Route to stage-specific UI update method
         switch stage {
         case "heating":
-            // Heating stage: Show temperature and time remaining
-            addParameter(label: "Brew Type", value: brewType)
-            addParameter(label: "Dose", value: "\(dose)g")
-            addParameter(label: "Target Temp", value: "\(temperature)°C")
-            addParameter(label: "Target Pressure", value: "\(pressure) bar")
-            
-            if let remainingTime: String = userInfo["remainingTime"] as? String {
-                addParameter(label: "Time Remaining", value: "\(remainingTime)s")
-            }
-            
-            progressLabel.text = "Heating: \(Int(progress))%"
+            displayHeatingUI(
+                brewType: brewType,
+                dose: dose,
+                temperature: temperature,
+                pressure: pressure,
+                progress: progress,
+                userInfo: userInfo
+            )
             
         case "grinding":
-            // Grinding stage: Show dose and grind information
-            addParameter(label: "Brew Type", value: brewType)
-            addParameter(label: "Dose", value: "\(dose)g")
-            addParameter(label: "Target Temp", value: "\(temperature)°C")
-            
-            progressLabel.text = "Grinding: \(Int(progress))%"
+            displayGrindingUI(
+                brewType: brewType,
+                dose: dose,
+                temperature: temperature,
+                progress: progress,
+                userInfo: userInfo
+            )
             
         case "preInfusion":
-            // Pre-infusion stage: Show pressure and timing
-            addParameter(label: "Brew Type", value: brewType)
-            addParameter(label: "Dose", value: "\(dose)g")
-            addParameter(label: "Pressure", value: "\(pressure) bar")
-            addParameter(label: "Temperature", value: "\(temperature)°C")
-            
-            if let preInfusionTime: String = userInfo["preInfusionTime"] as? String {
-                addParameter(label: "Pre-Infusion", value: "\(elapsedTime)s / \(preInfusionTime)s")
-            }
-            
-            progressLabel.text = "Pre-infusion: \(Int(progress))%"
+            displayPreInfusionUI(
+                brewType: brewType,
+                dose: dose,
+                temperature: temperature,
+                pressure: pressure,
+                elapsedTime: elapsedTime,
+                progress: progress,
+                userInfo: userInfo
+            )
             
         case "brewing":
-            // Brewing stage: Show full extraction dashboard
-            addParameter(label: "Elapsed Time", value: "\(elapsedTime)s")
-            addParameter(label: "Pressure", value: "\(pressure) bar")
-            addParameter(label: "Temperature", value: "\(temperature)°C")
-            addParameter(label: "Dose", value: "\(dose)g")
-            
-            if let flowRate: String = userInfo["flowRate"] as? String {
-                addParameter(label: "Flow Rate", value: "\(flowRate) ml/s")
-            }
-            
-            if let volume: String = userInfo["volumeExtracted"] as? String {
-                addParameter(label: "Volume", value: "\(volume) ml")
-            }
-            
-            progressLabel.text = "Extracting: \(Int(progress))%"
+            displayBrewingUI(
+                dose: dose,
+                temperature: temperature,
+                pressure: pressure,
+                elapsedTime: elapsedTime,
+                progress: progress,
+                userInfo: userInfo
+            )
             
         case "complete":
-            // Complete stage: Show final statistics
-            addParameter(label: "Brew Type", value: brewType)
-            addParameter(label: "Dose", value: "\(dose)g")
-            addParameter(label: "Total Time", value: "\(elapsedTime)s")
-            addParameter(label: "Temperature", value: "\(temperature)°C")
-            addParameter(label: "Pressure", value: "\(pressure) bar")
-            
-            progressLabel.text = "Complete! ☕"
+            displayCompleteUI(
+                brewType: brewType,
+                dose: dose,
+                temperature: temperature,
+                pressure: pressure,
+                elapsedTime: elapsedTime,
+                progress: progress,
+                userInfo: userInfo
+            )
             
         default:
             // Unknown stage: Show basic information
-            addParameter(label: "Brew Type", value: brewType)
-            addParameter(label: "Dose", value: "\(dose)g")
-            
-            progressLabel.text = "Brew in progress..."
+            displayDefaultUI(brewType: brewType, dose: dose)
         }
         
         // Update progress indicator
@@ -343,6 +355,258 @@ class NotificationViewController: UIViewController, UNNotificationContentExtensi
         
         // Apply stage-specific styling
         applyStageColors(stage: stage, progress: progress)
+    }
+    
+    /// Displays UI for the heating stage
+    ///
+    /// Shows a progress indicator with temperature and time remaining information.
+    /// The heating stage is the initial preparation phase where the machine brings
+    /// water to the target temperature before grinding begins.
+    ///
+    /// **UI Elements:**
+    /// - Brew type and dose information
+    /// - Target temperature and pressure settings
+    /// - Time remaining until heating completes
+    /// - Progress bar showing heating completion percentage
+    ///
+    /// - Parameters:
+    ///   - brewType: Type of brew being prepared
+    ///   - dose: Coffee dose in grams
+    ///   - temperature: Target water temperature in Celsius
+    ///   - pressure: Target extraction pressure in bars
+    ///   - progress: Heating progress percentage (0-100)
+    ///   - userInfo: Additional notification data
+    private func displayHeatingUI(
+        brewType: String,
+        dose: String,
+        temperature: String,
+        pressure: String,
+        progress: Double,
+        userInfo: [AnyHashable: Any]
+    ) {
+        // Display brew parameters
+        addParameter(label: "Brew Type", value: brewType)
+        addParameter(label: "Dose", value: "\(dose)g")
+        addParameter(label: "Target Temp", value: "\(temperature)°C")
+        addParameter(label: "Target Pressure", value: "\(pressure) bar")
+        
+        // Show time remaining if available
+        if let remainingTime: String = userInfo["remainingTime"] as? String {
+            addParameter(label: "Time Remaining", value: "\(remainingTime)s")
+        }
+        
+        // Update progress label
+        progressLabel.text = "Heating: \(Int(progress))%"
+    }
+    
+    /// Displays UI for the grinding stage
+    ///
+    /// Shows the grinding progress with an image (if attached) and dose information.
+    /// The grinding stage involves grinding the coffee beans to the specified dose
+    /// while the machine maintains the target temperature.
+    ///
+    /// **UI Elements:**
+    /// - Grinding image showing beans or grinder in action
+    /// - Brew type and dose information
+    /// - Target temperature for upcoming extraction
+    /// - Progress bar showing grinding completion percentage
+    ///
+    /// - Parameters:
+    ///   - brewType: Type of brew being prepared
+    ///   - dose: Coffee dose in grams
+    ///   - temperature: Target water temperature in Celsius
+    ///   - progress: Grinding progress percentage (0-100)
+    ///   - userInfo: Additional notification data
+    private func displayGrindingUI(
+        brewType: String,
+        dose: String,
+        temperature: String,
+        progress: Double,
+        userInfo: [AnyHashable: Any]
+    ) {
+        // Display brew parameters
+        addParameter(label: "Brew Type", value: brewType)
+        addParameter(label: "Dose", value: "\(dose)g")
+        addParameter(label: "Target Temp", value: "\(temperature)°C")
+        
+        // Show grind size if available
+        if let grindSize: String = userInfo["grindSize"] as? String {
+            addParameter(label: "Grind Size", value: grindSize)
+        }
+        
+        // Update progress label
+        progressLabel.text = "Grinding: \(Int(progress))%"
+    }
+    
+    /// Displays UI for the pre-infusion stage
+    ///
+    /// Shows a puck visualization with pressure and timing information. Pre-infusion
+    /// is the gentle saturation phase where low-pressure water evenly wets the coffee
+    /// puck before full extraction begins.
+    ///
+    /// **UI Elements:**
+    /// - Circular puck visualization showing saturation progress
+    /// - Current pressure and temperature readings
+    /// - Pre-infusion timer showing elapsed/total time
+    /// - Brew parameters (type, dose)
+    ///
+    /// - Parameters:
+    ///   - brewType: Type of brew being prepared
+    ///   - dose: Coffee dose in grams
+    ///   - temperature: Current water temperature in Celsius
+    ///   - pressure: Current extraction pressure in bars
+    ///   - elapsedTime: Time elapsed in pre-infusion (seconds)
+    ///   - progress: Pre-infusion progress percentage (0-100)
+    ///   - userInfo: Additional notification data
+    private func displayPreInfusionUI(
+        brewType: String,
+        dose: String,
+        temperature: String,
+        pressure: String,
+        elapsedTime: String,
+        progress: Double,
+        userInfo: [AnyHashable: Any]
+    ) {
+        // Display brew parameters
+        addParameter(label: "Brew Type", value: brewType)
+        addParameter(label: "Dose", value: "\(dose)g")
+        addParameter(label: "Pressure", value: "\(pressure) bar")
+        addParameter(label: "Temperature", value: "\(temperature)°C")
+        
+        // Show pre-infusion timing
+        if let preInfusionTime: String = userInfo["preInfusionTime"] as? String {
+            addParameter(label: "Pre-Infusion", value: "\(elapsedTime)s / \(preInfusionTime)s")
+        } else {
+            addParameter(label: "Elapsed Time", value: "\(elapsedTime)s")
+        }
+        
+        // Update progress label
+        progressLabel.text = "Pre-infusion: \(Int(progress))%"
+    }
+    
+    /// Displays UI for the brewing/extraction stage
+    ///
+    /// Shows a comprehensive stats grid with live extraction parameters. This is
+    /// the main extraction phase where pressurized water flows through the coffee
+    /// puck to extract the espresso.
+    ///
+    /// **UI Elements:**
+    /// - Live extraction image or video
+    /// - Stats grid with 6 key parameters:
+    ///   - Elapsed time
+    ///   - Current pressure
+    ///   - Current temperature
+    ///   - Coffee dose
+    ///   - Flow rate (ml/s)
+    ///   - Volume extracted (ml)
+    /// - Progress bar showing extraction completion
+    ///
+    /// - Parameters:
+    ///   - dose: Coffee dose in grams
+    ///   - temperature: Current water temperature in Celsius
+    ///   - pressure: Current extraction pressure in bars
+    ///   - elapsedTime: Time elapsed in extraction (seconds)
+    ///   - progress: Extraction progress percentage (0-100)
+    ///   - userInfo: Additional notification data
+    private func displayBrewingUI(
+        dose: String,
+        temperature: String,
+        pressure: String,
+        elapsedTime: String,
+        progress: Double,
+        userInfo: [AnyHashable: Any]
+    ) {
+        // Display live extraction parameters in priority order
+        addParameter(label: "Elapsed Time", value: "\(elapsedTime)s")
+        addParameter(label: "Pressure", value: "\(pressure) bar")
+        addParameter(label: "Temperature", value: "\(temperature)°C")
+        addParameter(label: "Dose", value: "\(dose)g")
+        
+        // Show flow rate if available
+        if let flowRate: String = userInfo["flowRate"] as? String {
+            addParameter(label: "Flow Rate", value: "\(flowRate) ml/s")
+        }
+        
+        // Show volume extracted if available
+        if let volume: String = userInfo["volumeExtracted"] as? String {
+            addParameter(label: "Volume", value: "\(volume) ml")
+        }
+        
+        // Update progress label
+        progressLabel.text = "Extracting: \(Int(progress))%"
+    }
+    
+    /// Displays UI for the brew complete stage
+    ///
+    /// Shows a hero image of the finished espresso with a summary card containing
+    /// final statistics. This is the completion phase where the brew is finished
+    /// and ready to enjoy.
+    ///
+    /// **UI Elements:**
+    /// - Hero image of completed espresso shot
+    /// - Summary card with final statistics:
+    ///   - Brew type
+    ///   - Coffee dose
+    ///   - Total brew time
+    ///   - Final temperature
+    ///   - Final pressure
+    ///   - Total volume (if available)
+    /// - Completion message with coffee emoji
+    ///
+    /// - Parameters:
+    ///   - brewType: Type of brew that was prepared
+    ///   - dose: Coffee dose in grams
+    ///   - temperature: Final water temperature in Celsius
+    ///   - pressure: Final extraction pressure in bars
+    ///   - elapsedTime: Total brew time (seconds)
+    ///   - progress: Should be 100 for completed brews
+    ///   - userInfo: Additional notification data
+    private func displayCompleteUI(
+        brewType: String,
+        dose: String,
+        temperature: String,
+        pressure: String,
+        elapsedTime: String,
+        progress: Double,
+        userInfo: [AnyHashable: Any]
+    ) {
+        // Display final brew statistics
+        addParameter(label: "Brew Type", value: brewType)
+        addParameter(label: "Dose", value: "\(dose)g")
+        addParameter(label: "Total Time", value: "\(elapsedTime)s")
+        addParameter(label: "Temperature", value: "\(temperature)°C")
+        addParameter(label: "Pressure", value: "\(pressure) bar")
+        
+        // Show final volume if available
+        if let volume: String = userInfo["volumeExtracted"] as? String {
+            addParameter(label: "Final Volume", value: "\(volume) ml")
+        }
+        
+        // Show brew quality rating if available
+        if let quality: String = userInfo["quality"] as? String {
+            addParameter(label: "Quality", value: quality)
+        }
+        
+        // Update progress label with completion message
+        progressLabel.text = "Complete! ☕"
+    }
+    
+    /// Displays default UI for unknown or invalid brew stages
+    ///
+    /// Provides a fallback display when the brew stage is not recognized or
+    /// when stage data is missing. Shows basic brew information to ensure
+    /// the notification is still useful even with incomplete data.
+    ///
+    /// - Parameters:
+    ///   - brewType: Type of brew being prepared
+    ///   - dose: Coffee dose in grams
+    private func displayDefaultUI(brewType: String, dose: String) {
+        // Display minimal brew information
+        addParameter(label: "Brew Type", value: brewType)
+        addParameter(label: "Dose", value: "\(dose)g")
+        
+        // Update progress label with generic message
+        progressLabel.text = "Brew in progress..."
     }
     
     /// Adds a parameter row to the parameters grid
