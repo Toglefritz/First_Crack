@@ -51,7 +51,7 @@ export interface StageConfig {
  * For demo purposes, these can be placeholder URLs
  */
 export const MEDIA_BASE_URL = process.env.MEDIA_BASE_URL ||
-  "https://storage.googleapis.com/first-crack-demo";
+  "https://firebasestorage.googleapis.com/v0/b/first-crack-demo.firebasestorage.app/o/";
 
 /**
  * Complete brew stage timeline
@@ -71,7 +71,7 @@ export const BREW_STAGES: StageConfig[] = [
     delaySeconds: 0,
     title: "Heating Water",
     body: "Your espresso machine is heating to the perfect temperature...",
-    imageUrl: "/images/heating.png",
+    imageUrl: "/heating.png",
     deepLink: "firstcrack://brew/heating",
     progress: 0,
     highPriority: false,
@@ -81,7 +81,7 @@ export const BREW_STAGES: StageConfig[] = [
     delaySeconds: 30,
     title: "Grinding Beans",
     body: "Grinding fresh coffee beans to the perfect particle size...",
-    imageUrl: "/images/grinding.png",
+    imageUrl: "/grinding.png",
     deepLink: "firstcrack://brew/grinding",
     progress: 40,
     highPriority: false,
@@ -91,7 +91,7 @@ export const BREW_STAGES: StageConfig[] = [
     delaySeconds: 30,
     title: "Pre-infusion",
     body: "Gently saturating the coffee puck at 2 bar...",
-    imageUrl: "/images/pre_infusion.png",
+    imageUrl: "/pre_infusion.png",
     deepLink: "firstcrack://brew/preinfusion",
     progress: 60,
     highPriority: true,
@@ -101,7 +101,7 @@ export const BREW_STAGES: StageConfig[] = [
     delaySeconds: 45,
     title: "Brewing",
     body: "Extracting espresso at 9 bar. Beautiful crema forming...",
-    videoUrl: "/videos/extraction-live.mp4",
+    videoUrl: "/brewing_video.mp4",
     imageUrl: "/images/brewing.png",
     actions: [
       {
@@ -127,7 +127,7 @@ export const BREW_STAGES: StageConfig[] = [
     delaySeconds: 75,
     title: "Your Espresso is Ready! ☕",
     body: "Perfect extraction: 36ml in 28s at 93°C. Enjoy!",
-    imageUrl: "/images/brew_complete.png",
+    imageUrl: "/brew_complete.png",
     actions: [
       {
         id: "view_details",

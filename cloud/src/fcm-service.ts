@@ -68,7 +68,7 @@ function buildFCMMessage(
         title: stageConfig.title,
         body: stageConfig.body,
         imageUrl: stageConfig.imageUrl ?
-          `${MEDIA_BASE_URL}${stageConfig.imageUrl}` : undefined,
+          `${MEDIA_BASE_URL}${stageConfig.imageUrl}?alt=media` : undefined,
         channelId: "brew_notifications",
         priority: stageConfig.highPriority ? "high" : "default",
         sound: "default",
@@ -105,7 +105,7 @@ function buildFCMMessage(
         body: stageConfig.body,
         icon: "/icons/icon-192.png",
         image: stageConfig.imageUrl ?
-          `${MEDIA_BASE_URL}${stageConfig.imageUrl}` : undefined,
+          `${MEDIA_BASE_URL}${stageConfig.imageUrl}?alt=media` : undefined,
         badge: "/icons/badge-72.png",
         requireInteraction: stageConfig.requireInteraction,
       },
@@ -144,11 +144,11 @@ function buildNotificationData(
 
   // Add optional fields
   if (stageConfig.imageUrl) {
-    data.imageUrl = `${MEDIA_BASE_URL}${stageConfig.imageUrl}`;
+    data.imageUrl = `${MEDIA_BASE_URL}${stageConfig.imageUrl}?alt=media`;
   }
 
   if (stageConfig.videoUrl) {
-    data.videoUrl = `${MEDIA_BASE_URL}${stageConfig.videoUrl}`;
+    data.videoUrl = `${MEDIA_BASE_URL}${stageConfig.videoUrl}?alt=media`;
   }
 
   if (stageConfig.actions) {
