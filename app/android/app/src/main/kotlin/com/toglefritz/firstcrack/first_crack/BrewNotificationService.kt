@@ -70,6 +70,10 @@ class BrewNotificationService : FirebaseMessagingService() {
      * with images, action buttons, and stage-specific content. The notification
      * is displayed using the Android notification system.
      *
+     * IMPORTANT: This service only handles data-only messages. If the FCM message
+     * includes a notification payload, Android will display it automatically and
+     * this method may not be called when the app is in the background.
+     *
      * Processing Steps:
      * 1. Parse FCM data payload
      * 2. Create notification channel (Android 8.0+)
@@ -85,6 +89,14 @@ class BrewNotificationService : FirebaseMessagingService() {
         Log.d(TAG, "Message received from FCM")
         Log.d(TAG, "Message ID: ${remoteMessage.messageId}")
         Log.d(TAG, "Data payload: ${remoteMessage.data}")
+        
+        // Check if message has notification payload (should not for brew notifications)
+        if (remoteMessage.notification != null) {
+            Log.w(TAG, "Message has notification payload - this will prevent custom handling in background")
+            Log.w(TAG, "Notification title: ${remoteMessage.notification?.title}")
+            Log.w(TAG, "Notification body: ${remoteMessage.notification?.body}")
+            Log.w(TAG, "Image URL: ${remoteMessage.notification?.imageUrl}")
+        }
         
         // Ensure notification channel exists
         createNotificationChannel()
@@ -203,8 +215,14 @@ class BrewNotificationService : FirebaseMessagingService() {
             .setSubText(subtitle)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
-            .setAutoCancel(true)
+            .setAutoCancel(false) // Don't auto-cancel so actions remain visible
+            .setOngoing(false) // Not an ongoing notification
             .setContentIntent(tapPendingIntent)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC) // Show on lock screen
+        
+        // Add stage-specific action buttons BEFORE setting style
+        // This ensures actions are visible in both collapsed and expanded states
+        addActionsForStage(notificationBuilder, stage, brewId, data)
         
         // Add large image if downloaded successfully
         if (bitmap != null) {
@@ -214,11 +232,9 @@ class BrewNotificationService : FirebaseMessagingService() {
                     NotificationCompat.BigPictureStyle()
                         .bigPicture(bitmap)
                         .bigLargeIcon(null as Bitmap?) // Hide large icon when expanded
+                        .showBigPictureWhenCollapsed(true) // Show image even when collapsed
                 )
         }
-        
-        // Add stage-specific action buttons
-        addActionsForStage(notificationBuilder, stage, brewId, data)
         
         // Display notification
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -307,11 +323,15 @@ class BrewNotificationService : FirebaseMessagingService() {
         brewId: String,
         data: Map<String, String>
     ) {
+        Log.d(TAG, "Adding actions for stage: $stage")
+        
         when (stage) {
             "heating" -> {
                 // No actions for heating stage
+                Log.d(TAG, "No actions for heating stage")
             }
             "grinding" -> {
+                Log.d(TAG, "Adding 2 actions for grinding stage")
                 builder.addAction(
                     createNotificationAction(
                         "pause_grinding",
@@ -330,6 +350,7 @@ class BrewNotificationService : FirebaseMessagingService() {
                 )
             }
             "preInfusion" -> {
+                Log.d(TAG, "Adding 2 actions for preInfusion stage")
                 builder.addAction(
                     createNotificationAction(
                         "skip_preinfusion",
@@ -348,6 +369,7 @@ class BrewNotificationService : FirebaseMessagingService() {
                 )
             }
             "brewing" -> {
+                Log.d(TAG, "Adding 2 actions for brewing stage")
                 builder.addAction(
                     createNotificationAction(
                         "stop_shot",
@@ -366,6 +388,7 @@ class BrewNotificationService : FirebaseMessagingService() {
                 )
             }
             "complete" -> {
+                Log.d(TAG, "Adding 3 actions for complete stage")
                 builder.addAction(
                     createNotificationAction(
                         "brew_again",
@@ -390,6 +413,9 @@ class BrewNotificationService : FirebaseMessagingService() {
                         data
                     )
                 )
+            }
+            else -> {
+                Log.w(TAG, "Unknown stage: $stage, no actions added")
             }
         }
     }
@@ -466,15 +492,17 @@ class BrewNotificationService : FirebaseMessagingService() {
      * Downloads an image from a URL and returns it as a Bitmap.
      *
      * This method performs synchronous HTTP download with timeout and size limits.
+     * Large images are automatically resized to fit notification constraints.
      * It should be called from a background thread (IO dispatcher).
      *
      * Download Configuration:
      * * Timeout: 10 seconds
      * * Max size: 5MB
+     * * Max dimensions: 1024x1024 (resized if larger)
      * * Error handling: Returns null on failure
      *
      * @param imageUrl URL of the image to download
-     * @return Downloaded image as Bitmap, or null if download fails
+     * @return Downloaded and resized image as Bitmap, or null if download fails
      */
     private suspend fun downloadImage(imageUrl: String): Bitmap? = withContext(Dispatchers.IO) {
         try {
@@ -504,10 +532,31 @@ class BrewNotificationService : FirebaseMessagingService() {
                 return@withContext null
             }
             
-            // Download and decode image
+            // Download and decode image with inJustDecodeBounds first to get dimensions
             val inputStream = connection.inputStream
-            val bitmap = BitmapFactory.decodeStream(inputStream)
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeStream(inputStream, null, options)
             inputStream.close()
+            
+            // Calculate sample size for efficient memory usage
+            val maxDimension = 1024
+            options.inSampleSize = calculateInSampleSize(options, maxDimension, maxDimension)
+            options.inJustDecodeBounds = false
+            
+            // Download again and decode with sample size
+            val connection2 = url.openConnection() as HttpURLConnection
+            connection2.apply {
+                connectTimeout = IMAGE_DOWNLOAD_TIMEOUT_MS
+                readTimeout = IMAGE_DOWNLOAD_TIMEOUT_MS
+                doInput = true
+            }
+            connection2.connect()
+            
+            val inputStream2 = connection2.inputStream
+            val bitmap = BitmapFactory.decodeStream(inputStream2, null, options)
+            inputStream2.close()
             
             if (bitmap != null) {
                 Log.d(TAG, "Image downloaded successfully: ${bitmap.width}x${bitmap.height}")
@@ -520,5 +569,40 @@ class BrewNotificationService : FirebaseMessagingService() {
             Log.e(TAG, "Error downloading image", e)
             null
         }
+    }
+
+    /**
+     * Calculates the optimal sample size for decoding a bitmap.
+     *
+     * This method determines how much to scale down an image during decoding
+     * to fit within the specified dimensions while maintaining aspect ratio.
+     * Using inSampleSize reduces memory usage significantly for large images.
+     *
+     * @param options BitmapFactory.Options containing the original image dimensions
+     * @param reqWidth Required width in pixels
+     * @param reqHeight Required height in pixels
+     * @return Sample size value (power of 2) for efficient decoding
+     */
+    private fun calculateInSampleSize(
+        options: BitmapFactory.Options,
+        reqWidth: Int,
+        reqHeight: Int
+    ): Int {
+        val height: Int = options.outHeight
+        val width: Int = options.outWidth
+        var inSampleSize = 1
+
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight: Int = height / 2
+            val halfWidth: Int = width / 2
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width
+            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+
+        return inSampleSize
     }
 }

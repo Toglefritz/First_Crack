@@ -61,19 +61,11 @@ function buildFCMMessage(
     token: brewState.deviceToken,
     data: dataPayload,
 
-    // Android configuration
+    // Android configuration - data-only message for custom notification handling
+    // The BrewNotificationService will build the notification with action buttons
+    // DO NOT include notification field - this prevents custom handling
     android: {
       priority: stageConfig.highPriority ? "high" : "normal",
-      notification: {
-        title: stageConfig.title,
-        body: stageConfig.body,
-        imageUrl: stageConfig.imageUrl ?
-          `${MEDIA_BASE_URL}${stageConfig.imageUrl}?alt=media` : undefined,
-        channelId: "brew_notifications",
-        priority: stageConfig.highPriority ? "high" : "default",
-        sound: "default",
-        tag: `brew_${brewState.brewId}`,
-      },
     },
 
     // iOS/macOS APNS configuration
