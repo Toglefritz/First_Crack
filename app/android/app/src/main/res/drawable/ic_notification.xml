@@ -1,0 +1,13 @@
+<!-- Notification icon for First Crack brew notifications -->
+<!-- This icon appears in the status bar and notification shade -->
+<!-- Must be a simple, monochrome design for Android notification guidelines -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Coffee cup icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M2,21 L22,21 L22,19 L2,19 L2,21 Z M20,8 L20,5 L4,5 L4,8 L4,15 C4,16.66 5.34,18 7,18 L17,18 C18.66,18 20,16.66 20,15 L20,8 Z M18,8 L6,8 L6,7 L18,7 L18,8 Z" />
+</vector>

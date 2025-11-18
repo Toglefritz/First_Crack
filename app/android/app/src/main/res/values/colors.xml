@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Color resources for First Crack Android app -->
+<resources>
+    <!-- Notification icon tint color -->
+    <!-- This color is applied to the notification icon in the status bar -->
+    <color name="notification_color">#8B4513</color> <!-- Coffee brown -->
+</resources>

@@ -11,11 +11,11 @@ plugins {
 android {
     namespace = "com.toglefritz.firstcrack.first_crack"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -44,4 +44,17 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Firebase Cloud Messaging - needed for custom Kotlin notification service
+    // The Flutter plugin brings this in at runtime, but we need it at compile time
+    implementation("com.google.firebase:firebase-messaging:24.1.0")
+    
+    // Kotlin coroutines for async image downloading in notifications
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    
+    // Core library desugaring for Java 8+ API support on older Android versions
+    // Required by flutter_local_notifications (version 2.1.4 or above)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
